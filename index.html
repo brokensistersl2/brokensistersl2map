@@ -368,6 +368,22 @@ class MapScene extends Phaser.Scene {
 
   refreshMarkerSprite(m){ this.removeMarkerSprite(m.id); this.renderMarker(m); }
 
+filterToMarker(id){
+  Object.keys(this.sprites).forEach(sid=>{
+    const visible=sid===id;
+    this.sprites[sid].sprite.setVisible(visible);
+    this.sprites[sid].label.setVisible(visible);
+    this.sprites[sid].glow.setVisible(visible);
+  });
+}
+showAllMarkers(){
+  Object.keys(this.sprites).forEach(sid=>{
+    this.sprites[sid].sprite.setVisible(true);
+    this.sprites[sid].label.setVisible(true);
+    this.sprites[sid].glow.setVisible(true);
+  });
+}
+
   flyTo(x, y){
     const cam = this.cameras.main;
     this.tweens.add({targets:cam, scrollX:x-this.scale.width/2/cam.zoom, scrollY:y-this.scale.height/2/cam.zoom, duration:700, ease:'Cubic.easeInOut'});
@@ -568,7 +584,7 @@ function positionPopup(m){
   if(left<10) left=10; if(top<topH+10) top=topH+10; if(top+ph>window.innerHeight-10) top=window.innerHeight-ph-10;
   document.getElementById('marker-popup').style.left=left+'px'; document.getElementById('marker-popup').style.top=top+'px';
 }
-document.getElementById('popup-close').addEventListener('click',closePopup);
+document.getElementById('popup-close').addEventListener('click',()=>{ closePopup(); if(scene)scene.showAllMarkers(); document.getElementById('search-input').value=''; });
 
 // Recherche
 document.getElementById('search-input').addEventListener('input',doSearch);
@@ -577,11 +593,11 @@ document.addEventListener('click',e=>{ if(!e.target.closest('#search-wrap')) doc
 function updateSearchResults(){ if(document.getElementById('search-input').value) doSearch(); }
 function doSearch(){
   const q=document.getElementById('search-input').value.toLowerCase().trim(), el=document.getElementById('search-results');
-  if(!q){el.style.display='none';return;}
+  if(!q){el.style.display='none';if(scene)scene.showAllMarkers();return;}
   const res=Object.values(markers).filter(m=>m.name.toLowerCase().includes(q)||CATS[m.category].label.toLowerCase().includes(q)||(m.desc&&m.desc.toLowerCase().includes(q))).slice(0,9);
   if(!res.length){el.innerHTML='<div class="search-empty">Aucun résultat trouvé…</div>';el.style.display='block';return;}
   el.innerHTML=res.map(m=>`<div class="search-item" data-id="${m.id}"><span class="s-dot" style="background:${CATS[m.category].hex}"></span><div><div class="s-name">${m.name}</div><div class="s-cat">${CATS[m.category].label}</div></div></div>`).join('');
-  el.querySelectorAll('.search-item').forEach(el2=>el2.addEventListener('click',()=>{ const m=markers[el2.dataset.id]; if(!m)return; document.getElementById('search-input').value=m.name; document.getElementById('search-results').style.display='none'; showPopup(m); }));
+  el.querySelectorAll('.search-item').forEach(el2=>el2.addEventListener('click',()=>{ const m=markers[el2.dataset.id]; if(!m)return; document.getElementById('search-input').value=m.name; document.getElementById('search-results').style.display='none'; if(scene)scene.filterToMarker(m.id); showPopup(m); }));
   el.style.display='block';
 }
 
