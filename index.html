@@ -354,7 +354,7 @@ class MapScene extends Phaser.Scene {
     sprite.on('pointerout',  () => this.tweens.add({targets:sprite, scaleX:1, scaleY:1, duration:120}));
     sprite.on('pointerup',   () => { if(!dragged) showPopup(m); });
     const label = this.add.text(m.x, m.y+32, m.name, {
-      fontFamily:"'Cinzel',serif", fontSize:'7px', color:cat.hex,
+      fontFamily:"'Cinzel',serif", fontSize:'5px', color:cat.hex,
       stroke:'#000000', strokeThickness:3, resolution:2
     }).setOrigin(0.5, 0).setDepth(12);
     this.sprites[m.id] = {sprite, label, glow};
@@ -375,7 +375,7 @@ class MapScene extends Phaser.Scene {
 
   // ── Tokens hexagonaux ────────────────────────────────
   makeToken(key){
-    const cat=CATS[key], R=16, DIM=R*2+4, cx=R+2, cy=R+2;
+    const cat=CATS[key], R=8, DIM=R*2+4, cx=R+2, cy=R+2;
     const g=this.make.graphics({add:false});
     const hp=this.hPts(cx,cy,R), ip=this.hPts(cx,cy,R-4);
     g.fillStyle(cat.col,0.18); g.fillPoints(this.hPts(cx,cy,R+4),true);
@@ -541,13 +541,16 @@ function showPopup(m){
   const badge=document.getElementById('popup-cat');
   badge.textContent=cat.label.toUpperCase(); badge.style.background=cat.hex+'22'; badge.style.color=cat.hex; badge.style.borderColor=cat.hex+'66';
   document.getElementById('popup-name').textContent=m.name;
-  const img=document.getElementById('popup-img'); if(m.imgUrl){img.src=m.imgUrl;img.style.display='block';}else{img.style.display='none';}
+  const img=document.getElementById('popup-img');
+  img.crossOrigin='anonymous';
+  img.onerror=()=>{ img.style.display='none'; };
+  if(m.imgUrl){ img.src=m.imgUrl; img.style.display='block'; } else { img.style.display='none'; }
   document.getElementById('popup-desc').textContent=m.desc||'';
   document.getElementById('popup-footer').style.display=isAdmin?'flex':'none';
-  positionPopup(m); document.getElementById('marker-popup').style.display='block';
+  positionPopup(m);
+  document.getElementById('marker-popup').style.display='block';
   document.getElementById('popup-edit').onclick=()=>{ closePopup(); showMarkerModal(m); };
   document.getElementById('popup-delete').onclick=()=>{ if(!confirm('Supprimer "'+m.name+'" ?')) return; dataDelete(m.id); closePopup(); };
-  if(scene) scene.flyTo(m.x, m.y);
 }
 function positionPopup(m){
   if(!scene) return;
