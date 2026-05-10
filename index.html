@@ -346,15 +346,15 @@ class MapScene extends Phaser.Scene {
     if(this.sprites[m.id]) return;
     const cat = CATS[m.category];
     const glow = this.add.graphics();
-    glow.fillStyle(cat.col, 0.12); glow.fillCircle(m.x, m.y, 12);
-    glow.lineStyle(1, cat.col, 0.12); glow.strokeCircle(m.x, m.y, 12);
+    glow.fillStyle(cat.col, 0.10); glow.fillCircle(m.x, m.y, 10);
+    glow.lineStyle(1, cat.col, 0.10); glow.strokeCircle(m.x, m.y, 10);
     glow.setDepth(10);
     const sprite = this.add.image(m.x, m.y, 'tok_'+m.category).setDepth(11).setInteractive({useHandCursor:true});
     sprite.on('pointerover', () => this.tweens.add({targets:sprite, scaleX:1.18, scaleY:1.18, duration:120, ease:'Back.out'}));
     sprite.on('pointerout',  () => this.tweens.add({targets:sprite, scaleX:1, scaleY:1, duration:120}));
     sprite.on('pointerup',   () => { if(!dragged) showPopup(markers[m.id] || m); });
     const label = this.add.text(m.x, m.y+18, m.name, {
-      fontFamily:"'Cinzel',serif", fontSize:'6px', color:cat.hex,
+      fontFamily:"'Cinzel',serif", fontSize:'5px', color:cat.hex,
       stroke:'#000000', strokeThickness:3, resolution:2
     }).setOrigin(0.5, 0).setDepth(12);
     this.sprites[m.id] = {sprite, label, glow};
@@ -375,10 +375,10 @@ class MapScene extends Phaser.Scene {
 
   // ── Tokens hexagonaux ────────────────────────────────
   makeToken(key){
-    const cat=CATS[key], R=8, DIM=R*2+8, cx=R+4, cy=R+4, s=R/26;
+    const cat=CATS[key], R=7, DIM=R*2+8, cx=R+4, cy=R+4, s=R/26;
     const g=this.make.graphics({add:false});
     const hp=this.hPts(cx,cy,R), ip=this.hPts(cx,cy,Math.max(1,R-4));
-    g.fillStyle(cat.col,0.12); g.fillPoints(this.hPts(cx,cy,R+3),true);
+    g.fillStyle(cat.col,0.10); g.fillPoints(this.hPts(cx,cy,R+3),true);
     g.fillStyle(cat.col,1); g.fillPoints(hp,true);
     g.fillStyle(0x000000,0.38); g.fillPoints(ip,true);
     g.lineStyle(Math.max(0.5,2*s),0xffffff,0.25);
