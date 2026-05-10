@@ -354,7 +354,7 @@ class MapScene extends Phaser.Scene {
     sprite.on('pointerout',  () => this.tweens.add({targets:sprite, scaleX:1, scaleY:1, duration:120}));
     sprite.on('pointerup',   () => { if(!dragged) showPopup(markers[m.id] || m); });
     const label = this.add.text(m.x, m.y+18, m.name, {
-      fontFamily:"'Cinzel',serif", fontSize:'5px', color:cat.hex,
+      fontFamily:"'Cinzel',serif", fontSize:'7px', color:cat.hex,
       stroke:'#000000', strokeThickness:3, resolution:2
     }).setOrigin(0.5, 0).setDepth(12);
     this.sprites[m.id] = {sprite, label, glow};
