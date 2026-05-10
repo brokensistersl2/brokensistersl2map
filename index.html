@@ -231,8 +231,7 @@ let isAdmin=false, addMode=false, dragged=false;
 let markers={};
 let pendingX=0, pendingY=0, editingId=null, openId=null, selCat='monstre';
 let scene=null;
-let fbReady=false, fbDb=null;
-let selectionMenu = null;
+let fbReady=false, fbDb=null, selectionMenu=null, markerClicked=false;
 const LS_KEY='bs_markers_v4';
 
 // ══════════════════════════════════════════════════════
@@ -309,7 +308,8 @@ class MapScene extends Phaser.Scene {
         setAddMode(false); showMarkerModal(null); return;
       }
       this.dragAnchor = null;
-      if(!dragged) closePopup();
+      if(!dragged && !markerClicked) closePopup();
+      markerClicked = false;
     });
     this.input.on('wheel', (p,o,dx,dy) => {
       const cam = this.cameras.main;
@@ -353,7 +353,7 @@ class MapScene extends Phaser.Scene {
     const sprite = this.add.image(m.x, m.y, 'tok_'+m.category).setDepth(11).setInteractive({useHandCursor:true});
     sprite.on('pointerover', () => this.tweens.add({targets:sprite, scaleX:1.18, scaleY:1.18, duration:120, ease:'Back.out'}));
     sprite.on('pointerout',  () => this.tweens.add({targets:sprite, scaleX:1, scaleY:1, duration:120}));
-    sprite.on('pointerup', () => { if(!dragged) handleMarkerClick(markers[m.id] || m); });
+    sprite.on('pointerup', () => { if(!dragged){ markerClicked=true; handleMarkerClick(markers[m.id]||m); } });
     const label = this.add.text(m.x, m.y+18, m.name, {
       fontFamily:"'Cinzel',serif", fontSize:'7px', color:cat.hex,
       stroke:'#000000', strokeThickness:3, resolution:2
