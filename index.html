@@ -352,7 +352,7 @@ class MapScene extends Phaser.Scene {
     const sprite = this.add.image(m.x, m.y, 'tok_'+m.category).setDepth(11).setInteractive({useHandCursor:true});
     sprite.on('pointerover', () => this.tweens.add({targets:sprite, scaleX:1.18, scaleY:1.18, duration:120, ease:'Back.out'}));
     sprite.on('pointerout',  () => this.tweens.add({targets:sprite, scaleX:1, scaleY:1, duration:120}));
-    sprite.on('pointerup',   () => { if(!dragged) showPopup(m); });
+    sprite.on('pointerup',   () => { if(!dragged) showPopup(markers[m.id] || m); });
     const label = this.add.text(m.x, m.y+18, m.name, {
       fontFamily:"'Cinzel',serif", fontSize:'8px', color:cat.hex,
       stroke:'#000000', strokeThickness:3, resolution:2
@@ -536,18 +536,27 @@ function saveMarker(){
 
 // Popup
 function showPopup(m){
-  openId=m.id;
-  const cat=CATS[m.category];
-  const badge=document.getElementById('popup-cat');
+  // Toujours prendre les données fraîches depuis markers
+  const fresh = markers[m.id] || m;
+  openId = fresh.id;
+  const cat = CATS[fresh.category];
+  const badge = document.getElementById('popup-cat');
   badge.textContent=cat.label.toUpperCase(); badge.style.background=cat.hex+'22'; badge.style.color=cat.hex; badge.style.borderColor=cat.hex+'66';
-  document.getElementById('popup-name').textContent=m.name;
-  const img=document.getElementById('popup-img'); if(m.imgUrl){img.src=m.imgUrl;img.style.display='block';}else{img.style.display='none';}
-  document.getElementById('popup-desc').textContent=m.desc||'';
-  document.getElementById('popup-footer').style.display=isAdmin?'flex':'none';
-  positionPopup(m); document.getElementById('marker-popup').style.display='block';
-  document.getElementById('popup-edit').onclick=()=>{ closePopup(); showMarkerModal(m); };
-  document.getElementById('popup-delete').onclick=()=>{ if(!confirm('Supprimer "'+m.name+'" ?')) return; dataDelete(m.id); closePopup(); };
-  if(scene) scene.flyTo(m.x, m.y);
+  document.getElementById('popup-name').textContent = fresh.name;
+  const img = document.getElementById('popup-img');
+  if(fresh.imgUrl && fresh.imgUrl.trim() !== ''){
+    img.src = fresh.imgUrl;
+    img.style.display = 'block';
+  } else {
+    img.style.display = 'none';
+  }
+  document.getElementById('popup-desc').textContent = fresh.desc || '';
+  document.getElementById('popup-footer').style.display = isAdmin ? 'flex' : 'none';
+  positionPopup(fresh);
+  document.getElementById('marker-popup').style.display = 'block';
+  document.getElementById('popup-edit').onclick = ()=>{ closePopup(); showMarkerModal(fresh); };
+  document.getElementById('popup-delete').onclick = ()=>{ if(!confirm('Supprimer "'+fresh.name+'" ?')) return; dataDelete(fresh.id); closePopup(); };
+  // Pas de flyTo — la caméra ne bouge plus
 }
 function positionPopup(m){
   if(!scene) return;
