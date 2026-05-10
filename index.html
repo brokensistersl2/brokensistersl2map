@@ -232,6 +232,7 @@ let markers={};
 let pendingX=0, pendingY=0, editingId=null, openId=null, selCat='monstre';
 let scene=null;
 let fbReady=false, fbDb=null;
+let selectionMenu = null;
 const LS_KEY='bs_markers_v4';
 
 // ══════════════════════════════════════════════════════
@@ -352,7 +353,7 @@ class MapScene extends Phaser.Scene {
     const sprite = this.add.image(m.x, m.y, 'tok_'+m.category).setDepth(11).setInteractive({useHandCursor:true});
     sprite.on('pointerover', () => this.tweens.add({targets:sprite, scaleX:1.18, scaleY:1.18, duration:120, ease:'Back.out'}));
     sprite.on('pointerout',  () => this.tweens.add({targets:sprite, scaleX:1, scaleY:1, duration:120}));
-    sprite.on('pointerup',   () => { if(!dragged) showPopup(markers[m.id] || m); });
+    sprite.on('pointerup', () => { if(!dragged) handleMarkerClick(markers[m.id] || m); });
     const label = this.add.text(m.x, m.y+18, m.name, {
       fontFamily:"'Cinzel',serif", fontSize:'7px', color:cat.hex,
       stroke:'#000000', strokeThickness:3, resolution:2
@@ -508,7 +509,42 @@ function dataDelete(id){
 function updateZoom(){ if(!scene) return; document.getElementById('zoom-label').textContent=Math.round(scene.cameras.main.zoom*100)+'%'; }
 function setAddMode(v){ addMode=v; document.getElementById('add-banner').style.display=v?'block':'none'; document.getElementById('btn-place').classList.toggle('placing',v); document.getElementById('btn-place').textContent=v?'✕ ANNULER':'+ MARKER'; }
 function closeAllModals(){ document.getElementById('modal-bg').style.display='none'; document.getElementById('pass-error').style.display='none'; document.getElementById('pass-input').value=''; }
-function closePopup(){ document.getElementById('marker-popup').style.display='none'; openId=null; }
+function closeSelectionMenu(){
+  if(selectionMenu){ selectionMenu.remove(); selectionMenu=null; }
+}
+
+function handleMarkerClick(m){
+  if(!scene) return;
+  const cam=scene.cameras.main, wv=cam.worldView, z=cam.zoom;
+  const sx=(m.x-wv.left)*z, sy=(m.y-wv.top)*z;
+  // Trouve tous les markers à moins de 32px à l'écran
+  const nearby=Object.values(markers).filter(o=>{
+    const ox=(o.x-wv.left)*z, oy=(o.y-wv.top)*z;
+    return Math.sqrt((ox-sx)**2+(oy-sy)**2)<32;
+  });
+  if(nearby.length<=1){ showPopup(m); return; }
+  // Plusieurs markers proches → menu de sélection
+  closeSelectionMenu(); closePopup();
+  const menu=document.createElement('div');
+  menu.style.cssText=`position:fixed;z-index:400;left:${sx+14}px;top:${sy-10}px;background:rgba(8,5,12,0.97);border:1px solid rgba(180,120,30,0.4);border-radius:4px;padding:4px;box-shadow:0 4px 20px rgba(0,0,0,0.85);min-width:170px;`;
+  nearby.forEach(mk=>{
+    const cat=CATS[mk.category];
+    const item=document.createElement('div');
+    item.style.cssText=`display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer;border-radius:3px;font-family:'Cinzel',serif;font-size:11px;color:#e8d5a0;letter-spacing:1px;`;
+    item.innerHTML=`<span style="width:9px;height:9px;border-radius:50%;background:${cat.hex};flex-shrink:0"></span>${mk.name}`;
+    item.addEventListener('mouseenter',()=>item.style.background='rgba(201,153,42,0.1)');
+    item.addEventListener('mouseleave',()=>item.style.background='');
+    item.addEventListener('click',()=>{ closeSelectionMenu(); showPopup(mk); });
+    menu.appendChild(item);
+  });
+  document.body.appendChild(menu);
+  selectionMenu=menu;
+  // Recadre si hors écran
+  const r=menu.getBoundingClientRect();
+  if(r.right>window.innerWidth-10) menu.style.left=(sx-r.width-14)+'px';
+  if(r.bottom>window.innerHeight-10) menu.style.top=(sy-r.height)+'px';
+}
+function closePopup(){ document.getElementById('marker-popup').style.display='none'; openId=null; closeSelectionMenu(); }
 function showModal(id){ document.getElementById('modal-bg').style.display='flex'; ['login-modal','marker-modal','mapimg-modal'].forEach(m=>document.getElementById(m).style.display=m===id?'block':'none'); setTimeout(()=>{ const f=document.getElementById(id).querySelector('input'); if(f) f.focus(); },80); }
 
 // Admin
