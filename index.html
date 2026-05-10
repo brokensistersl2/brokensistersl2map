@@ -347,7 +347,7 @@ class MapScene extends Phaser.Scene {
     const cat = CATS[m.category];
     const glow = this.add.graphics();
     glow.fillStyle(cat.col, 0.12); glow.fillCircle(m.x, m.y, 12);
-    glow.lineStyle(1, cat.col, 0.25); glow.strokeCircle(m.x, m.y, 18);
+    glow.lineStyle(1, cat.col, 0.12); glow.strokeCircle(m.x, m.y, 12);
     glow.setDepth(10);
     const sprite = this.add.image(m.x, m.y, 'tok_'+m.category).setDepth(11).setInteractive({useHandCursor:true});
     sprite.on('pointerover', () => this.tweens.add({targets:sprite, scaleX:1.18, scaleY:1.18, duration:120, ease:'Back.out'}));
