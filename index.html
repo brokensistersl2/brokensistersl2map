@@ -186,7 +186,7 @@ body{background:#07040a;overflow:hidden;font-family:'Cinzel',serif;width:100vw;h
 // ══════════════════════════════════════════════════════
 
 // Ton mot de passe admin
-const ADMIN_PASS = 'brokensister';
+const ADMIN_PASS = 'brokensister6969';
 
 // ▼▼▼ COLLE L'URL DE TA CARTE ICI ▼▼▼
 const MAP_IMAGE_URL = 'https://i.ibb.co/W4CPYBBt/Broken-Sisters-carte-du-monde-Lineage-2-Roleplay.png';
@@ -194,8 +194,22 @@ const MAP_IMAGE_URL = 'https://i.ibb.co/W4CPYBBt/Broken-Sisters-carte-du-monde-L
 
 // Clés Firebase — laisse vide pour le mode sauvegarde locale
 const FIREBASE_CONFIG = {
-  apiKey:'', authDomain:'', databaseURL:'',
-  projectId:'', storageBucket:'', messagingSenderId:'', appId:''
+  apiKey: "AIzaSyCeeEAA3Er43e8TtAv9Xbok9wXgq-7lg7o",
+
+  authDomain: "brokensisterslineage2map.firebaseapp.com",
+
+  databaseURL: "https://brokensisterslineage2map-default-rtdb.europe-west1.firebasedatabase.app",
+
+  projectId: "brokensisterslineage2map",
+
+  storageBucket: "brokensisterslineage2map.firebasestorage.app",
+
+  messagingSenderId: "1055450944720",
+
+  appId: "1:1055450944720:web:4e56f3649fb506733cfad5",
+
+  measurementId: "G-FJXHQTZ075"
+
 };
 
 // ══════════════════════════════════════════════════════
@@ -332,15 +346,15 @@ class MapScene extends Phaser.Scene {
     if(this.sprites[m.id]) return;
     const cat = CATS[m.category];
     const glow = this.add.graphics();
-    glow.fillStyle(cat.col, 0.12); glow.fillCircle(m.x, m.y, 32);
-    glow.lineStyle(1, cat.col, 0.25); glow.strokeCircle(m.x, m.y, 32);
+    glow.fillStyle(cat.col, 0.12); glow.fillCircle(m.x, m.y, 18);
+    glow.lineStyle(1, cat.col, 0.25); glow.strokeCircle(m.x, m.y, 18);
     glow.setDepth(10);
     const sprite = this.add.image(m.x, m.y, 'tok_'+m.category).setDepth(11).setInteractive({useHandCursor:true});
     sprite.on('pointerover', () => this.tweens.add({targets:sprite, scaleX:1.18, scaleY:1.18, duration:120, ease:'Back.out'}));
     sprite.on('pointerout',  () => this.tweens.add({targets:sprite, scaleX:1, scaleY:1, duration:120}));
     sprite.on('pointerup',   () => { if(!dragged) showPopup(m); });
-    const label = this.add.text(m.x, m.y+32, m.name, {
-      fontFamily:"'Cinzel',serif", fontSize:'11px', color:cat.hex,
+    const label = this.add.text(m.x, m.y+18, m.name, {
+      fontFamily:"'Cinzel',serif", fontSize:'8px', color:cat.hex,
       stroke:'#000000', strokeThickness:3, resolution:2
     }).setOrigin(0.5, 0).setDepth(12);
     this.sprites[m.id] = {sprite, label, glow};
@@ -361,18 +375,18 @@ class MapScene extends Phaser.Scene {
 
   // ── Tokens hexagonaux ────────────────────────────────
   makeToken(key){
-    const cat=CATS[key], R=26, DIM=R*2+4, cx=R+2, cy=R+2;
+    const cat=CATS[key], R=14, DIM=R*2+8, cx=R+4, cy=R+4, s=R/26;
     const g=this.make.graphics({add:false});
-    const hp=this.hPts(cx,cy,R), ip=this.hPts(cx,cy,R-4);
-    g.fillStyle(cat.col,0.18); g.fillPoints(this.hPts(cx,cy,R+4),true);
+    const hp=this.hPts(cx,cy,R), ip=this.hPts(cx,cy,Math.max(1,R-4));
+    g.fillStyle(cat.col,0.18); g.fillPoints(this.hPts(cx,cy,R+3),true);
     g.fillStyle(cat.col,1); g.fillPoints(hp,true);
     g.fillStyle(0x000000,0.38); g.fillPoints(ip,true);
-    g.lineStyle(2,0xffffff,0.25);
+    g.lineStyle(Math.max(0.5,2*s),0xffffff,0.25);
     g.beginPath(); g.moveTo(hp[4].x,hp[4].y); g.lineTo(hp[5].x,hp[5].y); g.lineTo(hp[0].x,hp[0].y); g.lineTo(hp[1].x,hp[1].y); g.strokePath();
-    g.lineStyle(2,0x000000,0.5);
+    g.lineStyle(Math.max(0.5,2*s),0x000000,0.5);
     g.beginPath(); g.moveTo(hp[1].x,hp[1].y); g.lineTo(hp[2].x,hp[2].y); g.lineTo(hp[3].x,hp[3].y); g.lineTo(hp[4].x,hp[4].y); g.strokePath();
-    g.lineStyle(1.5,0x000000,0.7); g.strokePoints(hp,true);
-    this.drawIcon(g,key,cx,cy);
+    g.lineStyle(Math.max(0.5,1.5*s),0x000000,0.7); g.strokePoints(hp,true);
+    this.drawIcon(g,key,cx,cy,s);
     g.generateTexture('tok_'+key,DIM,DIM); g.destroy();
   }
 
@@ -527,15 +541,13 @@ function showPopup(m){
   const badge=document.getElementById('popup-cat');
   badge.textContent=cat.label.toUpperCase(); badge.style.background=cat.hex+'22'; badge.style.color=cat.hex; badge.style.borderColor=cat.hex+'66';
   document.getElementById('popup-name').textContent=m.name;
-  const img=document.getElementById('popup-img');
-  img.onerror=()=>{ img.style.display='none'; };
-  if(m.imgUrl){ img.src=m.imgUrl; img.style.display='block'; } else { img.style.display='none'; }
+  const img=document.getElementById('popup-img'); if(m.imgUrl){img.src=m.imgUrl;img.style.display='block';}else{img.style.display='none';}
   document.getElementById('popup-desc').textContent=m.desc||'';
   document.getElementById('popup-footer').style.display=isAdmin?'flex':'none';
-  positionPopup(m);
-  document.getElementById('marker-popup').style.display='block';
+  positionPopup(m); document.getElementById('marker-popup').style.display='block';
   document.getElementById('popup-edit').onclick=()=>{ closePopup(); showMarkerModal(m); };
   document.getElementById('popup-delete').onclick=()=>{ if(!confirm('Supprimer "'+m.name+'" ?')) return; dataDelete(m.id); closePopup(); };
+  if(scene) scene.flyTo(m.x, m.y);
 }
 function positionPopup(m){
   if(!scene) return;
