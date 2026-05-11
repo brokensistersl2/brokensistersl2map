@@ -399,6 +399,11 @@ class MapScene extends Phaser.Scene {
     });
   }
 
+  // ── Déplacement caméra vers un marker ──
+  flyTo(x, y){
+    this.cameras.main.pan(x, y, 700, "Cubic.easeInOut");
+  }
+
   // ── Tokens hexagonaux ──
   makeToken(key){
     const cat=CATS[key], R=7, DIM=R*2+8, cx=R+4, cy=R+4, s=R/26;
@@ -674,8 +679,8 @@ function updateMarkerList(){
       const m=markers[el.dataset.id]; if(!m) return;
       document.getElementById('search-input').value=m.name;
       document.getElementById('search-results').style.display='none';
-      if(scene) scene.filterToMarker(m.id);
-      showPopup(m);
+      if(scene){ scene.filterToMarker(m.id); scene.flyTo(m.x, m.y); }
+      setTimeout(()=>showPopup(m), 720);
     });
   });
 }
