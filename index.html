@@ -92,6 +92,11 @@ body{background:#07040a;overflow:hidden;font-family:'Cinzel',serif;width:100vw;h
 .leg-label{font-size:18px;color:#8a7050;letter-spacing:2px;font-family:'Cinzel',serif}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-thumb{background:rgba(180,120,30,0.3);border-radius:2px}
+#marker-list{position:fixed;top:58px;right:0;width:280px;bottom:0;z-index:149;background:rgba(8,5,12,0.92);border-left:1px solid rgba(180,120,30,0.3);display:flex;flex-direction:column;overflow:hidden}
+#marker-list-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;color:#c9992a;text-align:center;padding:12px;border-bottom:1px solid rgba(180,120,30,0.25);flex-shrink:0}
+#marker-list-content{overflow-y:auto;flex:1;padding:10px 10px 350px 10px}
+#marker-list-content::-webkit-scrollbar{width:3px}
+#marker-list-content::-webkit-scrollbar-thumb{background:rgba(180,120,30,0.25);border-radius:2px}
 </style>
 </head>
 <body>
@@ -354,11 +359,7 @@ class MapScene extends Phaser.Scene {
     sprite.on('pointerover', () => this.tweens.add({targets:sprite, scaleX:1.18, scaleY:1.18, duration:120, ease:'Back.out'}));
     sprite.on('pointerout',  () => this.tweens.add({targets:sprite, scaleX:1, scaleY:1, duration:120}));
     sprite.on('pointerup', () => { if(!dragged){ markerClicked=true; handleMarkerClick(markers[m.id]||m); } });
-    const label = this.add.text(m.x, m.y+18, m.name, {
-      fontFamily:"'Cinzel',serif", fontSize:'7px', color:cat.hex,
-      stroke:'#000000', strokeThickness:3, resolution:2
-    }).setOrigin(0.5, 0).setDepth(12);
-    this.sprites[m.id] = {sprite, label, glow};
+    this.sprites[m.id] = {sprite, glow};
   }
 
   removeMarkerSprite(id){
@@ -368,22 +369,6 @@ class MapScene extends Phaser.Scene {
   }
 
   refreshMarkerSprite(m){ this.removeMarkerSprite(m.id); this.renderMarker(m); }
-
-filterToMarker(id){
-  Object.keys(this.sprites).forEach(sid=>{
-    const visible=sid===id;
-    this.sprites[sid].sprite.setVisible(visible);
-    this.sprites[sid].label.setVisible(visible);
-    this.sprites[sid].glow.setVisible(visible);
-  });
-}
-showAllMarkers(){
-  Object.keys(this.sprites).forEach(sid=>{
-    this.sprites[sid].sprite.setVisible(true);
-    this.sprites[sid].label.setVisible(true);
-    this.sprites[sid].glow.setVisible(true);
-  });
-}
 
   flyTo(x, y){
     const cam = this.cameras.main;
@@ -479,6 +464,7 @@ function initLocal(){
   setSyncPill('local');
   try{ markers=JSON.parse(localStorage.getItem(LS_KEY))||{}; }catch(e){ markers={}; }
   Object.values(markers).forEach(m=>{ if(scene) scene.renderMarker(m); });
+  updateMarkerList();
 }
 
 function initFirebase(){
@@ -626,7 +612,21 @@ document.getElementById('popup-close').addEventListener('click',()=>{ closePopup
 document.getElementById('search-input').addEventListener('input',doSearch);
 document.getElementById('search-input').addEventListener('focus',doSearch);
 document.addEventListener('click',e=>{ if(!e.target.closest('#search-wrap')) document.getElementById('search-results').style.display='none'; });
-function updateSearchResults(){ if(document.getElementById('search-input').value) doSearch(); }
+function updateMarkerList(){
+  const content=document.getElementById('marker-list-content');
+  if(!content)return;
+  const all=Object.values(markers);
+  if(!all.length){content.innerHTML='<div style="color:#5a4820;font-family:\'Crimson Text\',serif;font-style:italic;font-size:13px;text-align:center;padding:20px 8px">Aucun lieu enregistré…</div>';return;}
+  const grouped={};
+  all.sort((a,b)=>a.category.localeCompare(b.category)||a.name.localeCompare(b.name)).forEach(m=>{if(!grouped[m.category])grouped[m.category]=[];grouped[m.category].push(m);});
+  content.innerHTML=Object.entries(grouped).map(([cat,ms])=>`<div style="margin-bottom:14px"><div style="display:flex;align-items:center;gap:7px;padding:5px 4px;border-bottom:1px solid rgba(180,120,30,0.18);margin-bottom:4px"><span style="width:8px;height:8px;border-radius:50%;background:${CATS[cat].hex};flex-shrink:0"></span><span style="font-size:9px;letter-spacing:2px;color:${CATS[cat].hex};font-family:'Cinzel',serif">${CATS[cat].label}</span></div>${ms.map(m=>`<div class="ml-item" data-id="${m.id}" style="padding:5px 8px 5px 18px;cursor:pointer;border-radius:3px;font-family:'Cinzel',serif;font-size:10px;color:#c8b87a;letter-spacing:0.5px">${m.name}</div>`).join('')}</div>`).join('');
+  content.querySelectorAll('.ml-item').forEach(el=>{
+    el.addEventListener('mouseenter',()=>el.style.background='rgba(201,153,42,0.1)');
+    el.addEventListener('mouseleave',()=>el.style.background='');
+    el.addEventListener('click',()=>{const m=markers[el.dataset.id];if(!m)return;document.getElementById('search-input').value=m.name;document.getElementById('search-results').style.display='none';if(scene)scene.filterToMarker(m.id);showPopup(m);});
+  });
+}
+function updateSearchResults(){ if(document.getElementById('search-input').value) doSearch(); updateMarkerList(); }
 function doSearch(){
   const q=document.getElementById('search-input').value.toLowerCase().trim(), el=document.getElementById('search-results');
   if(!q){el.style.display='none';if(scene)scene.showAllMarkers();return;}
@@ -645,6 +645,10 @@ document.getElementById('btn-zoom-out').addEventListener('click',()=>{ if(!scene
 (function(){ const lg=document.getElementById('legend'); Object.values(CATS).forEach(cat=>{ const r=document.createElement('div'); r.className='leg-row'; r.innerHTML=`<span class="leg-dot" style="background:${cat.hex}"></span><span class="leg-label">${cat.label}</span>`; lg.appendChild(r); }); })();
 
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){closePopup();closeAllModals();if(addMode)setAddMode(false);} });
+<div id="marker-list">
+<div id="marker-list-title">✦ LIEUX ENREGISTRÉS ✦</div>
+<div id="marker-list-content"></div>
+</div>
 </script>
 </body>
 </html>
