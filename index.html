@@ -89,16 +89,31 @@ body{background:#07040a;overflow:hidden;font-family:'Cinzel',serif;width:100vw;h
 /* ── Panneau latéral droit ── */
 #marker-list{position:fixed;top:58px;right:0;width:380px;bottom:0;z-index:149;background:rgba(8,5,12,0.92);border-left:1px solid rgba(180,120,30,0.3);display:flex;flex-direction:column;overflow:hidden}
 #marker-list-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;color:#c9992a;text-align:center;padding:12px;border-bottom:1px solid rgba(180,120,30,0.25);flex-shrink:0}
+/* ── Contrôles tri/filtre ── */
+#marker-list-controls{padding:8px 10px;border-bottom:1px solid rgba(180,120,30,0.2);flex-shrink:0;display:flex;flex-direction:column;gap:7px}
+#sort-btns{display:flex;gap:5px}
+.sort-btn{flex:1;padding:5px 6px;border-radius:3px;border:1px solid rgba(180,120,30,0.25);background:rgba(255,255,255,0.03);color:#6a5030;font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.sort-btn:hover{background:rgba(201,153,42,0.1);color:#c9992a}
+.sort-btn.active{background:rgba(201,153,42,0.15);border-color:rgba(201,153,42,0.5);color:#f0c040}
+#level-filter{display:flex;align-items:center;gap:5px;font-family:'Cinzel',serif;font-size:9px;color:#6a5030;letter-spacing:1px}
+#level-filter input{width:54px;padding:4px 6px;border-radius:3px;border:1px solid rgba(180,120,30,0.25);background:rgba(255,255,255,0.04);color:#e8d5a0;font-family:'Cinzel',serif;font-size:11px;outline:none;-moz-appearance:textfield;appearance:textfield}
+#level-filter input::-webkit-inner-spin-button,#level-filter input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+#level-filter input:focus{border-color:rgba(201,153,42,0.5);background:rgba(255,255,255,0.06)}
+#level-filter .lf-sep{color:#5a4820;font-size:11px}
+#lvl-reset{padding:3px 8px;border-radius:3px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);color:#5a4820;font-size:10px;cursor:pointer;transition:all .15s;margin-left:auto}
+#lvl-reset:hover{background:rgba(200,40,40,0.1);border-color:rgba(200,40,40,0.3);color:#f06060}
+/* ── Liste markers ── */
 #marker-list-content{overflow-y:auto;flex:1;padding:10px 10px 360px 10px}
 #marker-list-content::-webkit-scrollbar{width:3px}
 #marker-list-content::-webkit-scrollbar-thumb{background:rgba(180,120,30,0.25);border-radius:2px}
+.ml-level-badge{font-size:9px;font-family:'Cinzel',serif;letter-spacing:0.5px;white-space:nowrap;flex-shrink:0}
 /* ── Légende ── */
 #legend-wrap{position:fixed;bottom:16px;right:16px;z-index:160;display:flex;flex-direction:column;align-items:center;gap:0}
 #legend-logo-box{width:110px;height:90px;border-radius:6px 6px 0 0;border:2px solid rgba(180,120,30,0.45);border-bottom:none;background:rgba(8,5,12,0.9);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px}
-#legend{background:rgba(8,5,12,0.9);border:2px solid rgba(180,120,30,0.45);border-radius:0 0 6px 6px;padding:14px 20px;display:flex;flex-direction:column;gap:9px}
+#legend{background:rgba(8,5,12,0.9);border:2px solid rgba(180,120,30,0.45);border-radius:0 0 6px 6px;padding:12px 18px;display:flex;flex-direction:column;gap:7px}
 .leg-row{display:flex;align-items:center;gap:10px}
-.leg-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
-.leg-label{font-size:11px;color:#8a7050;letter-spacing:1px;font-family:'Cinzel',serif}
+.leg-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.leg-label{font-size:10px;color:#8a7050;letter-spacing:1px;font-family:'Cinzel',serif}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-thumb{background:rgba(180,120,30,0.3);border-radius:2px}
 </style>
@@ -190,6 +205,19 @@ body{background:#07040a;overflow:hidden;font-family:'Cinzel',serif;width:100vw;h
 <!-- Panneau latéral droit -->
 <div id="marker-list">
   <div id="marker-list-title">✦ LIEUX ENREGISTRÉS ✦</div>
+  <div id="marker-list-controls">
+    <div id="sort-btns">
+      <button class="sort-btn active" data-sort="alpha">⇅ A → Z</button>
+      <button class="sort-btn" data-sort="level">⇅ Par Niveau</button>
+    </div>
+    <div id="level-filter">
+      <span>Niv.</span>
+      <input type="number" id="lvl-min" placeholder="min" min="0" max="9999">
+      <span class="lf-sep">—</span>
+      <input type="number" id="lvl-max" placeholder="max" min="0" max="9999">
+      <button id="lvl-reset" title="Réinitialiser le filtre">✕</button>
+    </div>
+  </div>
   <div id="marker-list-content"></div>
 </div>
 
@@ -219,15 +247,17 @@ const FIREBASE_CONFIG = {
 };
 
 // ══════════════════════════════════════════════════════
-//  CATÉGORIES
+//  CATÉGORIES (8 au total)
 // ══════════════════════════════════════════════════════
 const CATS = {
-  monstre : {label:'Monstres',    col:0xFF6B35, hex:'#FF6B35'},
-  raidboss: {label:'Raidboss',    col:0xDC143C, hex:'#DC143C'},
-  ville   : {label:'Ville',       col:0xFFD700, hex:'#FFD700'},
-  village : {label:'Village',     col:0xE8A020, hex:'#E8A020'},
-  secret  : {label:'Zone Secrète',col:0xB06FE8, hex:'#B06FE8'},
-  donjon  : {label:'Donjon',      col:0x00D4AA, hex:'#00D4AA'}
+  monstre   : {label:'Monstres',     col:0xFF6B35, hex:'#FF6B35'},
+  raidboss  : {label:'Raidboss',     col:0xDC143C, hex:'#DC143C'},
+  ville     : {label:'Ville',        col:0xFFD700, hex:'#FFD700'},
+  village   : {label:'Village',      col:0xE8A020, hex:'#E8A020'},
+  secret    : {label:'Zone Secrète', col:0xB06FE8, hex:'#B06FE8'},
+  donjon    : {label:'Donjon',       col:0x00D4AA, hex:'#00D4AA'},
+  npcspecial: {label:'NPC Spéciaux', col:0x4FC3F7, hex:'#4FC3F7'},
+  auberge   : {label:'Auberges',     col:0xC8965A, hex:'#C8965A'}
 };
 
 // ══════════════════════════════════════════════════════
@@ -238,6 +268,7 @@ let markers={};
 let pendingX=0, pendingY=0, editingId=null, openId=null, selCat='monstre';
 let scene=null;
 let fbReady=false, fbDb=null, selectionMenu=null, markerClicked=false;
+let currentSort='alpha'; // 'alpha' | 'level'
 const LS_KEY='bs_markers_v4';
 
 // ══════════════════════════════════════════════════════
@@ -257,11 +288,8 @@ class MapScene extends Phaser.Scene {
 
     if(this.textures.exists('mapbg')){
       const src = this.textures.get('mapbg').getSourceImage();
-      this.mapW = src.width;
-      this.mapH = src.height;
-    } else {
-      this.mapW = 4000; this.mapH = 3200;
-    }
+      this.mapW = src.width; this.mapH = src.height;
+    } else { this.mapW=4000; this.mapH=3200; }
 
     this.bgGfx = this.add.graphics();
     this.drawDefaultBg();
@@ -275,7 +303,7 @@ class MapScene extends Phaser.Scene {
     this.sprites = {};
     this.cameras.main.setBounds(0, 0, this.mapW, this.mapH);
     this.cameras.main.centerOn(this.mapW/2, this.mapH/2);
-    const zoomFit = Math.min(this.scale.width / this.mapW, this.scale.height / this.mapH);
+    const zoomFit = Math.min(this.scale.width/this.mapW, this.scale.height/this.mapH);
     this.cameras.main.setZoom(zoomFit);
 
     this.dragAnchor = null;
@@ -286,25 +314,25 @@ class MapScene extends Phaser.Scene {
     this.input.on('pointermove', p => {
       if(this.dragAnchor && !addMode){
         const z = this.cameras.main.zoom;
-        const dx = (p.x - this.dragAnchor.x)/z, dy = (p.y - this.dragAnchor.y)/z;
-        if(Math.abs(dx)>3 || Math.abs(dy)>3) dragged = true;
-        this.cameras.main.setScroll(this.dragAnchor.sx - dx, this.dragAnchor.sy - dy);
+        const dx=(p.x-this.dragAnchor.x)/z, dy=(p.y-this.dragAnchor.y)/z;
+        if(Math.abs(dx)>3||Math.abs(dy)>3) dragged=true;
+        this.cameras.main.setScroll(this.dragAnchor.sx-dx, this.dragAnchor.sy-dy);
         updateZoom();
       }
     });
     this.input.on('pointerup', p => {
       if(addMode){
-        const wp = this.cameras.main.getWorldPoint(p.x, p.y);
-        pendingX = wp.x; pendingY = wp.y;
+        const wp=this.cameras.main.getWorldPoint(p.x,p.y);
+        pendingX=wp.x; pendingY=wp.y;
         setAddMode(false); showMarkerModal(null); return;
       }
-      this.dragAnchor = null;
-      if(!dragged && !markerClicked) closePopup();
-      markerClicked = false;
+      this.dragAnchor=null;
+      if(!dragged&&!markerClicked) closePopup();
+      markerClicked=false;
     });
     this.input.on('wheel', (p,o,dx,dy) => {
-      const cam = this.cameras.main;
-      cam.setZoom(Phaser.Math.Clamp(cam.zoom * (dy > 0 ? 0.88 : 1.14), 0.15, 5));
+      const cam=this.cameras.main;
+      cam.setZoom(Phaser.Math.Clamp(cam.zoom*(dy>0?0.88:1.14),0.15,5));
       updateZoom();
     });
     this.input.keyboard.on('keydown-ESC', () => {
@@ -316,42 +344,41 @@ class MapScene extends Phaser.Scene {
   }
 
   drawDefaultBg(){
-    const g = this.bgGfx, W = this.mapW, H = this.mapH;
-    g.fillStyle(0x08040c, 1); g.fillRect(0, 0, W, H);
-    g.lineStyle(1, 0x1a0e24, 0.3);
-    for(let x=0; x<W; x+=80) g.lineBetween(x, 0, x, H);
-    for(let y=0; y<H; y+=80) g.lineBetween(0, y, W, y);
-    const rng = new Phaser.Math.RandomDataGenerator(['bseed42']);
-    const pal = [0x120a1a, 0x0e0814, 0x1a1030, 0x100820, 0x0a0610, 0x16101e];
-    for(let i=0; i<60; i++){
-      g.fillStyle(pal[rng.between(0,5)], rng.realInRange(0.4, 0.8));
-      g.fillEllipse(rng.between(0,W), rng.between(0,H), rng.between(100,500), rng.between(80,360));
+    const g=this.bgGfx, W=this.mapW, H=this.mapH;
+    g.fillStyle(0x08040c,1); g.fillRect(0,0,W,H);
+    g.lineStyle(1,0x1a0e24,0.3);
+    for(let x=0;x<W;x+=80) g.lineBetween(x,0,x,H);
+    for(let y=0;y<H;y+=80) g.lineBetween(0,y,W,y);
+    const rng=new Phaser.Math.RandomDataGenerator(['bseed42']);
+    const pal=[0x120a1a,0x0e0814,0x1a1030,0x100820,0x0a0610,0x16101e];
+    for(let i=0;i<60;i++){
+      g.fillStyle(pal[rng.between(0,5)],rng.realInRange(0.4,0.8));
+      g.fillEllipse(rng.between(0,W),rng.between(0,H),rng.between(100,500),rng.between(80,360));
     }
-    g.lineStyle(1, 0x3a2040, 0.35);
-    g.lineBetween(W/2, 0, W/2, H); g.lineBetween(0, H/2, W, H/2);
-    g.lineStyle(1, 0x4a2850, 0.18);
-    [400,800,1200].forEach(r => g.strokeCircle(W/2, H/2, r));
+    g.lineStyle(1,0x3a2040,0.35);
+    g.lineBetween(W/2,0,W/2,H); g.lineBetween(0,H/2,W,H/2);
+    g.lineStyle(1,0x4a2850,0.18);
+    [400,800,1200].forEach(r=>g.strokeCircle(W/2,H/2,r));
   }
 
-  // ── Markers SANS label texte ──────────────────────
+  // ── Markers SANS label texte ──
   renderMarker(m){
     if(this.sprites[m.id]) return;
-    const cat = CATS[m.category];
-    const glow = this.add.graphics();
-    glow.fillStyle(cat.col, 0.10); glow.fillCircle(m.x, m.y, 10);
-    glow.lineStyle(1, cat.col, 0.10); glow.strokeCircle(m.x, m.y, 10);
+    const cat=CATS[m.category]||{col:0x888888,hex:'#888888'};
+    const glow=this.add.graphics();
+    glow.fillStyle(cat.col,0.10); glow.fillCircle(m.x,m.y,10);
+    glow.lineStyle(1,cat.col,0.10); glow.strokeCircle(m.x,m.y,10);
     glow.setDepth(10);
-    const sprite = this.add.image(m.x, m.y, 'tok_'+m.category).setDepth(11).setInteractive({useHandCursor:true});
-    sprite.on('pointerover', () => this.tweens.add({targets:sprite, scaleX:1.18, scaleY:1.18, duration:120, ease:'Back.out'}));
-    sprite.on('pointerout',  () => this.tweens.add({targets:sprite, scaleX:1, scaleY:1, duration:120}));
-    sprite.on('pointerup', () => { if(!dragged){ markerClicked=true; handleMarkerClick(markers[m.id]||m); } });
-    // Pas de texte label sous le token
-    this.sprites[m.id] = {sprite, glow};
+    const sprite=this.add.image(m.x,m.y,'tok_'+m.category).setDepth(11).setInteractive({useHandCursor:true});
+    sprite.on('pointerover',()=>this.tweens.add({targets:sprite,scaleX:1.18,scaleY:1.18,duration:120,ease:'Back.out'}));
+    sprite.on('pointerout', ()=>this.tweens.add({targets:sprite,scaleX:1,scaleY:1,duration:120}));
+    sprite.on('pointerup', ()=>{ if(!dragged){ markerClicked=true; handleMarkerClick(markers[m.id]||m); } });
+    this.sprites[m.id]={sprite,glow};
   }
 
   removeMarkerSprite(id){
     if(!this.sprites[id]) return;
-    Object.values(this.sprites[id]).forEach(o => o.destroy());
+    Object.values(this.sprites[id]).forEach(o=>o.destroy());
     delete this.sprites[id];
   }
 
@@ -359,7 +386,7 @@ class MapScene extends Phaser.Scene {
 
   filterToMarker(id){
     Object.keys(this.sprites).forEach(sid=>{
-      const v = sid===id;
+      const v=sid===id;
       this.sprites[sid].sprite.setVisible(v);
       this.sprites[sid].glow.setVisible(v);
     });
@@ -372,7 +399,7 @@ class MapScene extends Phaser.Scene {
     });
   }
 
-  // ── Tokens hexagonaux ──────────────────────────────
+  // ── Tokens hexagonaux ──
   makeToken(key){
     const cat=CATS[key], R=7, DIM=R*2+8, cx=R+4, cy=R+4, s=R/26;
     const g=this.make.graphics({add:false});
@@ -390,7 +417,7 @@ class MapScene extends Phaser.Scene {
   }
 
   hPts(cx,cy,r){
-    return Array.from({length:6},(_,i)=>({x:cx+r*Math.cos(Math.PI/3*i-Math.PI/6), y:cy+r*Math.sin(Math.PI/3*i-Math.PI/6)}));
+    return Array.from({length:6},(_,i)=>({x:cx+r*Math.cos(Math.PI/3*i-Math.PI/6),y:cy+r*Math.sin(Math.PI/3*i-Math.PI/6)}));
   }
 
   drawIcon(g,key,cx,cy,s=1){
@@ -432,6 +459,45 @@ class MapScene extends Phaser.Scene {
         g.fillRect(cx-3*s,cy-4*s,2*s,10*s); g.fillRect(cx-0.5*s,cy-4*s,2*s,10*s); g.fillRect(cx+2*s,cy-4*s,2*s,10*s); g.fillRect(cx-3*s,cy,8*s,2*s);
         g.lineStyle(Math.max(0.5,1.5*s),0xffffff,0.6);
         g.strokeCircle(cx-2*s,cy-10*s,1.5*s); g.strokeCircle(cx+2*s,cy-10*s,1.5*s); break;
+
+      // ── NPC Spéciaux : silhouette encapuchonnée + étoile ──
+      case 'npcspecial':
+        // Tête
+        g.fillStyle(0xffffff,0.95);
+        g.fillCircle(cx,cy+1*s,3.5*s);
+        // Robe (triangle large)
+        g.fillTriangle(cx,cy+4.5*s,cx-6*s,cy+11*s,cx+6*s,cy+11*s);
+        // Étoile 4 branches au-dessus
+        g.fillStyle(0x4FC3F7,1);
+        g.fillTriangle(cx,cy-11*s,cx-2*s,cy-7.5*s,cx+2*s,cy-7.5*s); // haut
+        g.fillTriangle(cx,cy-4*s, cx-2*s,cy-7.5*s,cx+2*s,cy-7.5*s); // bas
+        g.fillTriangle(cx-4.5*s,cy-7.5*s,cx,cy-10*s,cx,cy-5*s);     // gauche
+        g.fillTriangle(cx+4.5*s,cy-7.5*s,cx,cy-10*s,cx,cy-5*s);     // droite
+        // Centre de l'étoile
+        g.fillStyle(0xffffff,0.9);
+        g.fillCircle(cx,cy-7.5*s,1.2*s);
+        break;
+
+      // ── Auberges : chope de bière ──
+      case 'auberge':
+        // Corps de la chope
+        g.fillStyle(0xffffff,0.92);
+        g.fillRect(cx-7*s,cy-3*s,10*s,12*s);
+        // Anse (stroke rectangle à droite)
+        g.lineStyle(Math.max(0.5,2.5*s),0xffffff,0.9);
+        g.strokeRect(cx+2.5*s,cy,4.5*s,6.5*s);
+        // Mousse sur le dessus
+        g.fillStyle(0xffffff,0.95);
+        g.fillEllipse(cx-2*s,cy-5.5*s,12*s,5*s);
+        // Bière (ambre chaud à l'intérieur)
+        g.fillStyle(0xC8965A,0.78);
+        g.fillRect(cx-6*s,cy-2.5*s,8*s,10.5*s);
+        // Petites bulles de mousse
+        g.fillStyle(0xffffff,0.75);
+        g.fillCircle(cx-3*s,cy-7.5*s,1.5*s);
+        g.fillCircle(cx+1*s,cy-8.5*s,2*s);
+        g.fillCircle(cx+4*s,cy-7*s,1.3*s);
+        break;
     }
   }
 }
@@ -440,16 +506,11 @@ class MapScene extends Phaser.Scene {
 //  PHASER INIT
 // ══════════════════════════════════════════════════════
 const game = new Phaser.Game({
-  type:Phaser.AUTO,
-  width:window.innerWidth,
-  height:window.innerHeight,
-  backgroundColor:'#08040c',
-  scene:MapScene,
-  parent:'phaser-host',
-  scale:{mode:Phaser.Scale.NONE},
-  input:{mouse:{preventDefaultWheel:true}}
+  type:Phaser.AUTO, width:window.innerWidth, height:window.innerHeight,
+  backgroundColor:'#08040c', scene:MapScene, parent:'phaser-host',
+  scale:{mode:Phaser.Scale.NONE}, input:{mouse:{preventDefaultWheel:true}}
 });
-window.addEventListener('resize', () => game.scale.resize(window.innerWidth, window.innerHeight));
+window.addEventListener('resize',()=>game.scale.resize(window.innerWidth,window.innerHeight));
 
 // ══════════════════════════════════════════════════════
 //  DONNÉES
@@ -457,7 +518,7 @@ window.addEventListener('resize', () => game.scale.resize(window.innerWidth, win
 function setSyncPill(mode){
   const p=document.getElementById('sync-pill'), t=document.getElementById('sync-txt');
   p.className=''; p.classList.add(mode);
-  t.textContent = mode==='online'?'LIVE' : mode==='loading'?'SYNC…' : 'LOCAL';
+  t.textContent=mode==='online'?'LIVE':mode==='loading'?'SYNC…':'LOCAL';
 }
 
 function initData(){
@@ -501,12 +562,12 @@ function initFirebase(){
     });
     markers=data;
     updateSearchResults();
-  }, ()=>initLocal());
+  },()=>initLocal());
 }
 
 function dataSave(m){
   if(fbReady&&fbDb){ fbDb.ref('markers/'+m.id).set(m); }
-  else {
+  else{
     markers[m.id]=m;
     localStorage.setItem(LS_KEY,JSON.stringify(markers));
     if(scene){ scene.refreshMarkerSprite(m); if(openId===m.id) showPopup(m); }
@@ -516,7 +577,7 @@ function dataSave(m){
 
 function dataDelete(id){
   if(fbReady&&fbDb){ fbDb.ref('markers/'+id).remove(); }
-  else {
+  else{
     delete markers[id];
     localStorage.setItem(LS_KEY,JSON.stringify(markers));
     if(scene) scene.removeMarkerSprite(id);
@@ -525,42 +586,94 @@ function dataDelete(id){
 }
 
 // ══════════════════════════════════════════════════════
-//  PANNEAU LATÉRAL — liste auto des markers
+//  PANNEAU LATÉRAL — tri + filtre par niveau
 // ══════════════════════════════════════════════════════
+
+// Extrait le niveau depuis le nom (cherche "lvl X" ou "Lvl X")
+function getLevelFromName(name){
+  const m=name.match(/[Ll]vl\s*(\d+)/);
+  return m?parseInt(m[1]):null;
+}
+
 function updateMarkerList(){
-  const content = document.getElementById('marker-list-content');
+  const content=document.getElementById('marker-list-content');
   if(!content) return;
-  const all = Object.values(markers);
+
+  // Lire les filtres de niveau
+  const lvlMinEl=document.getElementById('lvl-min');
+  const lvlMaxEl=document.getElementById('lvl-max');
+  const lvlMin=lvlMinEl&&lvlMinEl.value!==''?parseInt(lvlMinEl.value):null;
+  const lvlMax=lvlMaxEl&&lvlMaxEl.value!==''?parseInt(lvlMaxEl.value):null;
+
+  let all=Object.values(markers);
+
+  // Appliquer le filtre de niveau si actif
+  if(lvlMin!==null||lvlMax!==null){
+    all=all.filter(m=>{
+      const lvl=getLevelFromName(m.name);
+      if(lvl===null) return false;
+      if(lvlMin!==null&&lvl<lvlMin) return false;
+      if(lvlMax!==null&&lvl>lvlMax) return false;
+      return true;
+    });
+  }
+
   if(!all.length){
-    content.innerHTML = '<div style="color:#5a4820;font-family:\'Crimson Text\',serif;font-style:italic;font-size:13px;text-align:center;padding:20px 8px">Aucun lieu enregistré…</div>';
+    const msg=(lvlMin!==null||lvlMax!==null)
+      ?'Aucun lieu pour ce filtre de niveau…'
+      :'Aucun lieu enregistré…';
+    content.innerHTML=`<div style="color:#5a4820;font-family:'Crimson Text',serif;font-style:italic;font-size:13px;text-align:center;padding:20px 8px">${msg}</div>`;
     return;
   }
-  const grouped = {};
-  all.sort((a,b)=>a.category.localeCompare(b.category)||a.name.localeCompare(b.name))
-     .forEach(m=>{ if(!grouped[m.category]) grouped[m.category]=[]; grouped[m.category].push(m); });
 
-  let html = '';
-  Object.entries(grouped).forEach(([cat,ms])=>{
-    html += `<div style="margin-bottom:14px">`;
-    html += `<div style="display:flex;align-items:center;gap:7px;padding:5px 4px;border-bottom:1px solid rgba(180,120,30,0.18);margin-bottom:4px">`;
-    html += `<span style="width:8px;height:8px;border-radius:50%;background:${CATS[cat].hex};flex-shrink:0"></span>`;
-    html += `<span style="font-size:12px;letter-spacing:2px;color:${CATS[cat].hex};font-family:'Cinzel',serif">${CATS[cat].label}</span>`;
-    html += `</div>`;
-    ms.forEach(m=>{
-      html += `<div class="ml-item" data-id="${m.id}" style="padding:7px 10px 7px 20px;cursor:pointer;border-radius:3px;font-family:'Cinzel',serif;font-size:13px;color:#c8b87a;letter-spacing:0.5px">${m.name}</div>`;
+  let html='';
+
+  if(currentSort==='level'){
+    // ── Liste plate triée par niveau (sans regroupement par catégorie) ──
+    all.sort((a,b)=>{
+      const la=getLevelFromName(a.name)??9999;
+      const lb=getLevelFromName(b.name)??9999;
+      return la!==lb?la-lb:a.name.localeCompare(b.name);
     });
-    html += `</div>`;
-  });
-  content.innerHTML = html;
+    all.forEach(m=>{
+      const cat=CATS[m.category]||{hex:'#888888'};
+      const lvl=getLevelFromName(m.name);
+      html+=`<div class="ml-item" data-id="${m.id}" style="padding:6px 10px;cursor:pointer;border-radius:3px;display:flex;align-items:center;gap:8px;margin-bottom:2px">`;
+      html+=`<span style="width:9px;height:9px;border-radius:50%;background:${cat.hex};flex-shrink:0"></span>`;
+      html+=`<span style="font-family:'Cinzel',serif;font-size:13px;color:#c8b87a;letter-spacing:0.5px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.name}</span>`;
+      if(lvl!==null) html+=`<span class="ml-level-badge" style="color:${cat.hex}">Lvl ${lvl}</span>`;
+      html+=`</div>`;
+    });
+  } else {
+    // ── Trié A→Z, regroupé par catégorie (ordre de CATS) ──
+    all.sort((a,b)=>a.name.localeCompare(b.name));
+    const grouped={};
+    all.forEach(m=>{if(!grouped[m.category])grouped[m.category]=[];grouped[m.category].push(m);});
+
+    Object.keys(CATS).forEach(cat=>{
+      if(!grouped[cat]) return;
+      const ms=grouped[cat];
+      html+=`<div style="margin-bottom:14px">`;
+      html+=`<div style="display:flex;align-items:center;gap:7px;padding:5px 4px;border-bottom:1px solid rgba(180,120,30,0.18);margin-bottom:4px">`;
+      html+=`<span style="width:8px;height:8px;border-radius:50%;background:${CATS[cat].hex};flex-shrink:0"></span>`;
+      html+=`<span style="font-size:12px;letter-spacing:2px;color:${CATS[cat].hex};font-family:'Cinzel',serif">${CATS[cat].label}</span>`;
+      html+=`</div>`;
+      ms.forEach(m=>{
+        html+=`<div class="ml-item" data-id="${m.id}" style="padding:7px 10px 7px 20px;cursor:pointer;border-radius:3px;font-family:'Cinzel',serif;font-size:13px;color:#c8b87a;letter-spacing:0.5px">${m.name}</div>`;
+      });
+      html+=`</div>`;
+    });
+  }
+
+  content.innerHTML=html;
 
   content.querySelectorAll('.ml-item').forEach(el=>{
     el.addEventListener('mouseenter',()=>{ el.style.background='rgba(201,153,42,0.1)'; });
     el.addEventListener('mouseleave',()=>{ el.style.background=''; });
     el.addEventListener('click',()=>{
-      const m = markers[el.dataset.id];
-      if(!m) return;
-      document.getElementById('search-input').value = m.name;
-      document.getElementById('search-results').style.display = 'none';
+      const m=markers[el.dataset.id]; if(!m) return;
+      document.getElementById('search-input').value=m.name;
+      document.getElementById('search-results').style.display='none';
       if(scene) scene.filterToMarker(m.id);
       showPopup(m);
     });
@@ -572,14 +685,14 @@ function updateMarkerList(){
 // ══════════════════════════════════════════════════════
 function updateZoom(){
   if(!scene) return;
-  document.getElementById('zoom-label').textContent = Math.round(scene.cameras.main.zoom*100)+'%';
+  document.getElementById('zoom-label').textContent=Math.round(scene.cameras.main.zoom*100)+'%';
 }
 
 function setAddMode(v){
   addMode=v;
-  document.getElementById('add-banner').style.display = v?'block':'none';
+  document.getElementById('add-banner').style.display=v?'block':'none';
   document.getElementById('btn-place').classList.toggle('placing',v);
-  document.getElementById('btn-place').textContent = v?'✕ ANNULER':'+ MARKER';
+  document.getElementById('btn-place').textContent=v?'✕ ANNULER':'+ MARKER';
 }
 
 function closeAllModals(){
@@ -605,7 +718,7 @@ function handleMarkerClick(m){
   const menu=document.createElement('div');
   menu.style.cssText='position:fixed;z-index:400;left:'+(sx+14)+'px;top:'+(sy-10)+'px;background:rgba(8,5,12,0.97);border:1px solid rgba(180,120,30,0.4);border-radius:4px;padding:4px;box-shadow:0 4px 20px rgba(0,0,0,0.85);min-width:170px;';
   nearby.forEach(mk=>{
-    const cat=CATS[mk.category];
+    const cat=CATS[mk.category]||{hex:'#888'};
     const item=document.createElement('div');
     item.style.cssText='display:flex;align-items:center;gap:8px;padding:7px 10px;cursor:pointer;border-radius:3px;font-family:\'Cinzel\',serif;font-size:11px;color:#e8d5a0;letter-spacing:1px;';
     item.innerHTML='<span style="width:9px;height:9px;border-radius:50%;background:'+cat.hex+';flex-shrink:0"></span>'+mk.name;
@@ -630,14 +743,14 @@ function closePopup(){
 function showModal(id){
   document.getElementById('modal-bg').style.display='flex';
   ['login-modal','marker-modal','mapimg-modal'].forEach(mid=>{
-    document.getElementById(mid).style.display = mid===id?'block':'none';
+    document.getElementById(mid).style.display=mid===id?'block':'none';
   });
   setTimeout(()=>{ const f=document.getElementById(id).querySelector('input'); if(f) f.focus(); },80);
 }
 
 // ── Admin ──
 document.getElementById('admin-toggle').addEventListener('click',()=>{ if(isAdmin) doLogout(); else showModal('login-modal'); });
-document.getElementById('btn-logout').addEventListener('click', doLogout);
+document.getElementById('btn-logout').addEventListener('click',doLogout);
 
 function doLogout(){
   isAdmin=false; setAddMode(false);
@@ -655,9 +768,9 @@ function doLogin(){
   closeAllModals();
 }
 
-document.getElementById('btn-pass-ok').addEventListener('click', checkPass);
+document.getElementById('btn-pass-ok').addEventListener('click',checkPass);
 document.getElementById('pass-input').addEventListener('keydown',e=>{ if(e.key==='Enter') checkPass(); });
-document.getElementById('btn-pass-cancel').addEventListener('click', closeAllModals);
+document.getElementById('btn-pass-cancel').addEventListener('click',closeAllModals);
 
 function checkPass(){
   if(document.getElementById('pass-input').value===ADMIN_PASS){
@@ -676,15 +789,15 @@ document.getElementById('btn-map').addEventListener('click',()=>{
   document.getElementById('mapimg-url').value=localStorage.getItem('bs_mapurl_v2')||MAP_IMAGE_URL||'';
   showModal('mapimg-modal');
 });
-document.getElementById('btn-map-cancel').addEventListener('click', closeAllModals);
+document.getElementById('btn-map-cancel').addEventListener('click',closeAllModals);
 document.getElementById('btn-map-apply').addEventListener('click',()=>{
   const url=document.getElementById('mapimg-url').value.trim();
-  localStorage.setItem('bs_mapurl_v2', url);
+  localStorage.setItem('bs_mapurl_v2',url);
   alert('URL sauvegardée ! La page va se recharger.');
   location.reload();
 });
 
-// ── Catégories ──
+// ── Catégories (auto-générées depuis CATS) ──
 const cg=document.getElementById('cat-grid');
 Object.entries(CATS).forEach(([key,cat])=>{
   const b=document.createElement('button');
@@ -718,15 +831,15 @@ function showMarkerModal(ex){
   showModal('marker-modal');
 }
 
-document.getElementById('btn-m-cancel').addEventListener('click', closeAllModals);
-document.getElementById('btn-m-save').addEventListener('click', saveMarker);
+document.getElementById('btn-m-cancel').addEventListener('click',closeAllModals);
+document.getElementById('btn-m-save').addEventListener('click',saveMarker);
 document.getElementById('m-name').addEventListener('keydown',e=>{ if(e.key==='Enter') saveMarker(); });
 
 function saveMarker(){
   const name=document.getElementById('m-name').value.trim();
   if(!name){ document.getElementById('m-name').style.borderColor='#c04040'; document.getElementById('m-name').focus(); return; }
-  const base=editingId?markers[editingId]:{id:Date.now().toString(), x:pendingX, y:pendingY};
-  dataSave({...base, category:selCat, name, desc:document.getElementById('m-desc').value.trim(), imgUrl:document.getElementById('m-img').value.trim()});
+  const base=editingId?markers[editingId]:{id:Date.now().toString(),x:pendingX,y:pendingY};
+  dataSave({...base,category:selCat,name,desc:document.getElementById('m-desc').value.trim(),imgUrl:document.getElementById('m-img').value.trim()});
   closeAllModals();
 }
 
@@ -734,7 +847,7 @@ function saveMarker(){
 function showPopup(m){
   const fresh=markers[m.id]||m;
   openId=fresh.id;
-  const cat=CATS[fresh.category];
+  const cat=CATS[fresh.category]||{label:'???',hex:'#888'};
   const badge=document.getElementById('popup-cat');
   badge.textContent=cat.label.toUpperCase();
   badge.style.background=cat.hex+'22';
@@ -744,9 +857,7 @@ function showPopup(m){
   const img=document.getElementById('popup-img');
   if(fresh.imgUrl&&fresh.imgUrl.trim()!==''){
     img.src=fresh.imgUrl; img.style.display='block';
-  } else {
-    img.style.display='none';
-  }
+  } else { img.style.display='none'; }
   document.getElementById('popup-desc').textContent=fresh.desc||'';
   document.getElementById('popup-footer').style.display=isAdmin?'flex':'none';
   positionPopup(fresh);
@@ -779,8 +890,8 @@ document.getElementById('popup-close').addEventListener('click',()=>{
 });
 
 // ── Recherche ──
-document.getElementById('search-input').addEventListener('input', doSearch);
-document.getElementById('search-input').addEventListener('focus', doSearch);
+document.getElementById('search-input').addEventListener('input',doSearch);
+document.getElementById('search-input').addEventListener('focus',doSearch);
 document.addEventListener('click',e=>{
   if(!e.target.closest('#search-wrap')) document.getElementById('search-results').style.display='none';
 });
@@ -796,11 +907,11 @@ function doSearch(){
   if(!q){ el.style.display='none'; if(scene) scene.showAllMarkers(); return; }
   const res=Object.values(markers).filter(m=>
     m.name.toLowerCase().includes(q)||
-    CATS[m.category].label.toLowerCase().includes(q)||
+    (CATS[m.category]&&CATS[m.category].label.toLowerCase().includes(q))||
     (m.desc&&m.desc.toLowerCase().includes(q))
   ).slice(0,9);
   if(!res.length){ el.innerHTML='<div class="search-empty">Aucun résultat trouvé…</div>'; el.style.display='block'; return; }
-  el.innerHTML=res.map(m=>`<div class="search-item" data-id="${m.id}"><span class="s-dot" style="background:${CATS[m.category].hex}"></span><div><div class="s-name">${m.name}</div><div class="s-cat">${CATS[m.category].label}</div></div></div>`).join('');
+  el.innerHTML=res.map(m=>`<div class="search-item" data-id="${m.id}"><span class="s-dot" style="background:${(CATS[m.category]||{hex:'#888'}).hex}"></span><div><div class="s-name">${m.name}</div><div class="s-cat">${(CATS[m.category]||{label:'???'}).label}</div></div></div>`).join('');
   el.querySelectorAll('.search-item').forEach(item=>item.addEventListener('click',()=>{
     const m=markers[item.dataset.id]; if(!m) return;
     document.getElementById('search-input').value=m.name;
@@ -814,16 +925,14 @@ function doSearch(){
 // ── Zoom ──
 document.getElementById('btn-zoom-in').addEventListener('click',()=>{
   if(!scene) return;
-  scene.cameras.main.setZoom(Math.min(5, scene.cameras.main.zoom*1.25));
-  updateZoom();
+  scene.cameras.main.setZoom(Math.min(5,scene.cameras.main.zoom*1.25)); updateZoom();
 });
 document.getElementById('btn-zoom-out').addEventListener('click',()=>{
   if(!scene) return;
-  scene.cameras.main.setZoom(Math.max(0.15, scene.cameras.main.zoom/1.25));
-  updateZoom();
+  scene.cameras.main.setZoom(Math.max(0.15,scene.cameras.main.zoom/1.25)); updateZoom();
 });
 
-// ── Légende ──
+// ── Légende (auto depuis CATS) ──
 (function(){
   const lg=document.getElementById('legend');
   Object.values(CATS).forEach(cat=>{
@@ -832,6 +941,25 @@ document.getElementById('btn-zoom-out').addEventListener('click',()=>{
     lg.appendChild(r);
   });
 })();
+
+// ── Boutons de tri ──
+document.querySelectorAll('.sort-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    currentSort=btn.dataset.sort;
+    document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    updateMarkerList();
+  });
+});
+
+// ── Filtre par niveau ──
+document.getElementById('lvl-min').addEventListener('input',updateMarkerList);
+document.getElementById('lvl-max').addEventListener('input',updateMarkerList);
+document.getElementById('lvl-reset').addEventListener('click',()=>{
+  document.getElementById('lvl-min').value='';
+  document.getElementById('lvl-max').value='';
+  updateMarkerList();
+});
 
 // ── ESC global ──
 document.addEventListener('keydown',e=>{
