@@ -176,6 +176,58 @@ body{background:#07040a;overflow:hidden;font-family:'Cinzel',serif;width:100vw;h
 .lp-confirm-btn:hover{background:rgba(201,153,42,0.28);border-color:#c9992a}
 .lp-cancel-btn{padding:5px 10px;border-radius:3px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:#6a5030;font-family:'Cinzel',serif;font-size:9px;cursor:pointer;transition:all .15s}
 .lp-cancel-btn:hover{background:rgba(255,255,255,0.07);color:#a09060}
+
+/* ── Bouton Joueur ── */
+#player-toggle{padding:0 14px;height:28px;border-radius:3px;background:rgba(79,195,247,0.08);border:1px solid rgba(79,195,247,0.3);color:#4FC3F7;cursor:pointer;font-size:11px;letter-spacing:2px;font-family:'Cinzel',serif;transition:all .2s;white-space:nowrap}
+#player-toggle:hover{background:rgba(79,195,247,0.18);border-color:rgba(79,195,247,0.6)}
+#player-toggle.logged{background:rgba(79,195,247,0.15);border-color:#4FC3F7;color:#a0e8ff;box-shadow:0 0 8px rgba(79,195,247,0.2)}
+
+/* ── Modal Auth ── */
+.auth-tabs{display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid rgba(180,120,30,0.2)}
+.auth-tab{flex:1;padding:8px 0;text-align:center;font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;color:#5a4820;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none}
+.auth-tab.active{color:#4FC3F7;border-bottom-color:#4FC3F7}
+.auth-tab:hover{color:#a0e8ff}
+.auth-section{display:none}
+.auth-section.active{display:block}
+#auth-error{color:#c04040;font-family:'Crimson Text',serif;font-style:italic;font-size:13px;margin-top:10px;display:none}
+#auth-success{color:#00d4aa;font-family:'Crimson Text',serif;font-style:italic;font-size:13px;margin-top:10px;display:none}
+
+/* ── Panneau Joueur ── */
+#player-panel{position:fixed;top:58px;left:0;width:360px;bottom:0;z-index:148;background:rgba(8,5,12,0.95);border-right:1px solid rgba(79,195,247,0.25);display:none;flex-direction:column;overflow:hidden;transform:translateX(-100%);transition:transform .3s ease}
+#player-panel.open{transform:translateX(0)}
+#player-panel-header{padding:14px 16px;border-bottom:1px solid rgba(79,195,247,0.15);flex-shrink:0;display:flex;align-items:center;justify-content:space-between}
+#player-name-display{font-family:'Cinzel',serif;font-size:12px;color:#4FC3F7;letter-spacing:2px}
+#player-pseudo{font-family:'Crimson Text',serif;font-size:12px;color:#6a8090;font-style:italic;margin-top:2px}
+#player-logout-btn{background:none;border:1px solid rgba(200,40,40,0.25);border-radius:3px;color:#8a4040;font-family:'Cinzel',serif;font-size:9px;letter-spacing:1px;padding:3px 8px;cursor:pointer;transition:all .15s}
+#player-logout-btn:hover{border-color:rgba(200,40,40,0.6);color:#f06060}
+#player-panel-body{overflow-y:auto;flex:1;padding:0}
+#player-panel-body::-webkit-scrollbar{width:3px}
+#player-panel-body::-webkit-scrollbar-thumb{background:rgba(79,195,247,0.2);border-radius:2px}
+.player-section{border-bottom:1px solid rgba(79,195,247,0.1);padding:14px 16px}
+.player-section-title{font-family:'Cinzel',serif;font-size:9px;letter-spacing:3px;color:#4FC3F7;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.player-section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(79,195,247,0.3),transparent)}
+
+/* Notes */
+#notes-area{width:100%;min-height:140px;padding:8px 10px;border-radius:4px;background:rgba(255,255,255,0.03);border:1px solid rgba(79,195,247,0.2);color:#c8d8e0;font-family:'Crimson Text',serif;font-size:13px;line-height:1.6;resize:vertical;outline:none;transition:border-color .2s}
+#notes-area:focus{border-color:rgba(79,195,247,0.5);background:rgba(255,255,255,0.05)}
+#notes-area::placeholder{color:#3a5060}
+#notes-save-btn{margin-top:8px;width:100%;padding:6px 0;border-radius:3px;background:rgba(79,195,247,0.1);border:1px solid rgba(79,195,247,0.3);color:#4FC3F7;font-family:'Cinzel',serif;font-size:9px;letter-spacing:2px;cursor:pointer;transition:all .2s}
+#notes-save-btn:hover{background:rgba(79,195,247,0.2);border-color:#4FC3F7}
+#notes-saved{font-family:'Crimson Text',serif;font-size:11px;color:#00d4aa;text-align:center;margin-top:5px;opacity:0;transition:opacity .3s}
+
+/* Favoris */
+.fav-item{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;border-radius:3px}
+.fav-item:hover{background:rgba(79,195,247,0.06);padding-left:4px}
+.fav-item-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.fav-item-name{font-family:'Cinzel',serif;font-size:12px;color:#c8d8e0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:0.3px}
+.fav-item-del{background:none;border:none;color:#3a5060;cursor:pointer;font-size:10px;padding:2px 4px;transition:color .15s;flex-shrink:0}
+.fav-item-del:hover{color:#f06060}
+.fav-empty{font-family:'Crimson Text',serif;font-style:italic;color:#3a5060;font-size:13px}
+
+/* Étoile de favori dans popup */
+#popup-fav-btn{position:absolute;top:10px;right:38px;background:none;border:none;font-size:16px;cursor:pointer;color:#3a5060;transition:color .2s;line-height:1;padding:2px}
+#popup-fav-btn.active{color:#ffd700;text-shadow:0 0 8px rgba(255,215,0,0.5)}
+#popup-fav-btn:hover{color:#ffd700}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-thumb{background:rgba(180,120,30,0.3);border-radius:2px}
 </style>
@@ -199,6 +251,7 @@ body{background:#07040a;overflow:hidden;font-family:'Cinzel',serif;width:100vw;h
     <span id="zoom-label">100%</span>
     <button class="zoom-btn" id="btn-zoom-in">+</button>
     <button class="zoom-btn" id="btn-zoom-out">−</button>
+    <button id="player-toggle">♟ JOUEUR</button>
     <button id="admin-toggle">⚙ ADMIN</button>
   </div>
 </div>
@@ -214,7 +267,7 @@ body{background:#07040a;overflow:hidden;font-family:'Cinzel',serif;width:100vw;h
 <div id="add-banner">✦ Cliquez sur la carte pour placer le marker · ESC pour annuler ✦</div>
 
 <div id="marker-popup">
-  <div id="popup-top"><span id="popup-cat"></span><button id="popup-close">✕</button></div>
+  <div id="popup-top" style="position:relative"><span id="popup-cat"></span><button id="popup-fav-btn" title="Ajouter aux favoris">☆</button><button id="popup-close">✕</button></div>
   <div id="popup-name"></div>
   <img id="popup-img" alt="">
   <div id="popup-desc"></div>
@@ -261,6 +314,65 @@ body{background:#07040a;overflow:hidden;font-family:'Cinzel',serif;width:100vw;h
     <div class="modal-btns">
       <button class="btn-sec" id="btn-map-cancel">ANNULER</button>
       <button class="btn-pri" id="btn-map-apply">✓ APPLIQUER</button>
+    </div>
+  </div>
+  <!-- Modal Auth Joueur -->
+  <div class="modal" id="player-auth-modal" style="display:none">
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login">CONNEXION</button>
+      <button class="auth-tab" data-tab="register">CRÉER UN COMPTE</button>
+      <button class="auth-tab" data-tab="reset">MOT DE PASSE</button>
+    </div>
+    <!-- Connexion -->
+    <div class="auth-section active" id="auth-login">
+      <label class="modal" style="display:block;font-size:10px;letter-spacing:2px;color:#6a5030;margin:0 0 5px">PSEUDO</label>
+      <input type="text" id="login-pseudo" placeholder="Votre pseudo…" style="width:100%;padding:8px 10px;border-radius:3px;background:rgba(255,255,255,0.04);border:1px solid rgba(180,120,30,0.2);color:#e8d5a0;font-family:'Crimson Text',serif;font-size:14px;outline:none;margin-bottom:10px">
+      <label class="modal" style="display:block;font-size:10px;letter-spacing:2px;color:#6a5030;margin:0 0 5px">MOT DE PASSE</label>
+      <input type="password" id="login-pass" placeholder="••••••••" style="width:100%;padding:8px 10px;border-radius:3px;background:rgba(255,255,255,0.04);border:1px solid rgba(180,120,30,0.2);color:#e8d5a0;font-family:'Crimson Text',serif;font-size:14px;outline:none">
+    </div>
+    <!-- Inscription -->
+    <div class="auth-section" id="auth-register">
+      <label class="modal" style="display:block;font-size:10px;letter-spacing:2px;color:#6a5030;margin:0 0 5px">PSEUDO</label>
+      <input type="text" id="reg-pseudo" placeholder="Votre pseudo en jeu…" style="width:100%;padding:8px 10px;border-radius:3px;background:rgba(255,255,255,0.04);border:1px solid rgba(180,120,30,0.2);color:#e8d5a0;font-family:'Crimson Text',serif;font-size:14px;outline:none;margin-bottom:10px">
+      <label class="modal" style="display:block;font-size:10px;letter-spacing:2px;color:#6a5030;margin:0 0 5px">EMAIL</label>
+      <input type="email" id="reg-email" placeholder="votre@email.com" style="width:100%;padding:8px 10px;border-radius:3px;background:rgba(255,255,255,0.04);border:1px solid rgba(180,120,30,0.2);color:#e8d5a0;font-family:'Crimson Text',serif;font-size:14px;outline:none;margin-bottom:10px">
+      <label class="modal" style="display:block;font-size:10px;letter-spacing:2px;color:#6a5030;margin:0 0 5px">MOT DE PASSE</label>
+      <input type="password" id="reg-pass" placeholder="Minimum 6 caractères" style="width:100%;padding:8px 10px;border-radius:3px;background:rgba(255,255,255,0.04);border:1px solid rgba(180,120,30,0.2);color:#e8d5a0;font-family:'Crimson Text',serif;font-size:14px;outline:none">
+    </div>
+    <!-- Reset -->
+    <div class="auth-section" id="auth-reset">
+      <p style="font-family:'Crimson Text',serif;font-style:italic;color:#6a5030;font-size:13px;margin-bottom:14px">Entrez l'email associé à votre compte. Vous recevrez un lien pour réinitialiser votre mot de passe.</p>
+      <label class="modal" style="display:block;font-size:10px;letter-spacing:2px;color:#6a5030;margin:0 0 5px">EMAIL</label>
+      <input type="email" id="reset-email" placeholder="votre@email.com" style="width:100%;padding:8px 10px;border-radius:3px;background:rgba(255,255,255,0.04);border:1px solid rgba(180,120,30,0.2);color:#e8d5a0;font-family:'Crimson Text',serif;font-size:14px;outline:none">
+    </div>
+    <div id="auth-error"></div>
+    <div id="auth-success"></div>
+    <div class="modal-btns" style="margin-top:22px">
+      <button class="btn-sec" id="btn-auth-cancel">ANNULER</button>
+      <button class="btn-pri" id="btn-auth-ok">CONNEXION</button>
+    </div>
+  </div>
+</div>
+
+<!-- Panneau Joueur -->
+<div id="player-panel">
+  <div id="player-panel-header">
+    <div>
+      <div id="player-name-display">♟ MON ESPACE</div>
+      <div id="player-pseudo"></div>
+    </div>
+    <button id="player-logout-btn">DÉCONNEXION</button>
+  </div>
+  <div id="player-panel-body">
+    <div class="player-section">
+      <div class="player-section-title">📝 MES NOTES</div>
+      <textarea id="notes-area" placeholder="Écris tes notes ici… stratégies, positions, objectifs…"></textarea>
+      <button id="notes-save-btn">✓ SAUVEGARDER</button>
+      <div id="notes-saved">Notes sauvegardées ✓</div>
+    </div>
+    <div class="player-section">
+      <div class="player-section-title">⭐ MES FAVORIS</div>
+      <div id="fav-list"><div class="fav-empty">Aucun favori — clique sur ★ dans une fiche.</div></div>
     </div>
   </div>
 </div>
@@ -670,16 +782,25 @@ function initData(){
   const s1=document.createElement('script'), s2=document.createElement('script');
   s1.src='https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js';
   s1.onload=()=>{
+    const s2=document.createElement('script');
+    const s3=document.createElement('script');
     s2.src='https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js';
-    s2.onload=()=>{
+    s3.src='https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js';
+    let loaded=0;
+    const tryInit=()=>{
+      loaded++;
+      if(loaded<2) return;
       try{
         firebase.initializeApp(FIREBASE_CONFIG);
         fbDb=firebase.database(); fbReady=true;
         setSyncPill('loading'); initFirebase();
+        initPlayerAuth();
       }catch(e){ initLocal(); }
     };
-    s2.onerror=()=>initLocal();
+    s2.onload=tryInit; s2.onerror=()=>initLocal();
+    s3.onload=tryInit; s3.onerror=()=>{ loaded++; if(loaded>=2) tryInit(); };
     document.head.appendChild(s2);
+    document.head.appendChild(s3);
   };
   s1.onerror=()=>initLocal();
   document.head.appendChild(s1);
@@ -1296,6 +1417,245 @@ document.getElementById('lvl-reset').addEventListener('click',()=>{
   document.getElementById('lvl-max').value='';
   updateMarkerList();
 });
+
+
+// ══════════════════════════════════════════════════════
+//  SYSTÈME JOUEUR — AUTH + NOTES + FAVORIS
+// ══════════════════════════════════════════════════════
+let currentUser  = null;  // objet Firebase User
+let currentTab   = 'login';
+let playerPanelOpen = false;
+
+// ── Onglets du modal auth ──────────────────────
+document.querySelectorAll('.auth-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    currentTab = tab.dataset.tab;
+    document.querySelectorAll('.auth-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.auth-section').forEach(s=>s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('auth-'+currentTab).classList.add('active');
+    document.getElementById('btn-auth-ok').textContent =
+      currentTab==='login'?'CONNEXION' : currentTab==='register'?'CRÉER LE COMPTE' : 'ENVOYER LE LIEN';
+    hideAuthMsg();
+  });
+});
+
+function showAuthErr(msg){ const e=document.getElementById('auth-error'); e.textContent=msg; e.style.display='block'; document.getElementById('auth-success').style.display='none'; }
+function showAuthOk(msg) { const s=document.getElementById('auth-success'); s.textContent=msg; s.style.display='block'; document.getElementById('auth-error').style.display='none'; }
+function hideAuthMsg(){ document.getElementById('auth-error').style.display='none'; document.getElementById('auth-success').style.display='none'; }
+
+// ── Bouton Joueur ──────────────────────────────
+document.getElementById('player-toggle').addEventListener('click',()=>{
+  if(currentUser){ togglePlayerPanel(); }
+  else { showPlayerAuthModal(); }
+});
+
+function showPlayerAuthModal(){
+  hideAuthMsg();
+  document.getElementById('modal-bg').style.display='flex';
+  ['login-modal','marker-modal','mapimg-modal','player-auth-modal'].forEach(mid=>{
+    document.getElementById(mid).style.display = mid==='player-auth-modal'?'block':'none';
+  });
+  setTimeout(()=>{ const f=document.getElementById('auth-login').querySelector('input'); if(f) f.focus(); },80);
+}
+
+document.getElementById('btn-auth-cancel').addEventListener('click', closeAllModals);
+
+document.getElementById('btn-auth-ok').addEventListener('click', ()=>{
+  if(currentTab==='login')    doPlayerLogin();
+  else if(currentTab==='register') doPlayerRegister();
+  else                        doPlayerReset();
+});
+['login-pseudo','login-pass','reg-pseudo','reg-email','reg-pass','reset-email'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) el.addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('btn-auth-ok').click(); });
+});
+
+// ── Firebase Auth init ─────────────────────────
+function initPlayerAuth(){
+  firebase.auth().onAuthStateChanged(user=>{
+    currentUser = user;
+    if(user){
+      document.getElementById('player-toggle').classList.add('logged');
+      document.getElementById('player-toggle').textContent = '♟ '+( user.displayName||'JOUEUR');
+      document.getElementById('player-pseudo').textContent  = user.displayName||user.email;
+      loadPlayerData();
+    } else {
+      document.getElementById('player-toggle').classList.remove('logged');
+      document.getElementById('player-toggle').textContent = '♟ JOUEUR';
+      document.getElementById('player-pseudo').textContent = '';
+      closePlayerPanel();
+    }
+  });
+}
+
+// ── Connexion ──────────────────────────────────
+function doPlayerLogin(){
+  const pseudo = document.getElementById('login-pseudo').value.trim();
+  const pass   = document.getElementById('login-pass').value;
+  if(!pseudo||!pass){ showAuthErr('Remplis tous les champs.'); return; }
+  // Chercher l'email lié à ce pseudo dans la DB
+  fbDb.ref('pseudos/'+pseudo.toLowerCase()).once('value', snap=>{
+    const email = snap.val();
+    if(!email){ showAuthErr('Pseudo introuvable.'); return; }
+    firebase.auth().signInWithEmailAndPassword(email, pass)
+      .then(()=>{ closeAllModals(); setTimeout(()=>openPlayerPanel(),200); })
+      .catch(err=>showAuthErr(err.message==='Firebase: Error (auth/wrong-password).'?'Mot de passe incorrect.':'Erreur : '+err.message));
+  });
+}
+
+// ── Inscription ────────────────────────────────
+function doPlayerRegister(){
+  const pseudo = document.getElementById('reg-pseudo').value.trim();
+  const email  = document.getElementById('reg-email').value.trim();
+  const pass   = document.getElementById('reg-pass').value;
+  if(!pseudo||!email||!pass){ showAuthErr('Remplis tous les champs.'); return; }
+  if(pass.length<6){ showAuthErr('Mot de passe trop court (6 caractères min).'); return; }
+  // Vérifier que le pseudo n'est pas déjà pris
+  fbDb.ref('pseudos/'+pseudo.toLowerCase()).once('value', snap=>{
+    if(snap.val()){ showAuthErr('Ce pseudo est déjà utilisé.'); return; }
+    firebase.auth().createUserWithEmailAndPassword(email, pass)
+      .then(cred=>{
+        return Promise.all([
+          cred.user.updateProfile({displayName: pseudo}),
+          fbDb.ref('pseudos/'+pseudo.toLowerCase()).set(email),
+          fbDb.ref('players/'+cred.user.uid+'/pseudo').set(pseudo)
+        ]);
+      })
+      .then(()=>{ closeAllModals(); setTimeout(()=>openPlayerPanel(),200); })
+      .catch(err=>{
+        const msg = err.code==='auth/email-already-in-use'?'Email déjà utilisé.':
+                    err.code==='auth/invalid-email'?'Email invalide.':'Erreur : '+err.message;
+        showAuthErr(msg);
+      });
+  });
+}
+
+// ── Reset mot de passe ─────────────────────────
+function doPlayerReset(){
+  const email = document.getElementById('reset-email').value.trim();
+  if(!email){ showAuthErr('Entre ton adresse email.'); return; }
+  firebase.auth().sendPasswordResetEmail(email)
+    .then(()=>showAuthOk('Email envoyé ! Vérifie ta boîte mail.'))
+    .catch(()=>showAuthErr('Email introuvable ou invalide.'));
+}
+
+// ── Déconnexion ────────────────────────────────
+document.getElementById('player-logout-btn').addEventListener('click',()=>{
+  firebase.auth().signOut();
+  closePlayerPanel();
+});
+
+// ── Panel joueur ───────────────────────────────
+function openPlayerPanel(){
+  const panel=document.getElementById('player-panel');
+  panel.style.display='flex';
+  requestAnimationFrame(()=>panel.classList.add('open'));
+  playerPanelOpen=true;
+  loadPlayerData();
+}
+
+function closePlayerPanel(){
+  const panel=document.getElementById('player-panel');
+  panel.classList.remove('open');
+  setTimeout(()=>{ panel.style.display='none'; },310);
+  playerPanelOpen=false;
+}
+
+function togglePlayerPanel(){
+  if(playerPanelOpen) closePlayerPanel(); else openPlayerPanel();
+}
+
+// ── Charger notes + favoris ────────────────────
+function loadPlayerData(){
+  if(!currentUser) return;
+  const uid=currentUser.uid;
+  // Notes
+  fbDb.ref('players/'+uid+'/notes').once('value', snap=>{
+    document.getElementById('notes-area').value = snap.val()||'';
+  });
+  // Favoris
+  fbDb.ref('players/'+uid+'/favorites').on('value', snap=>{
+    renderFavorites(snap.val()||{});
+    updateAllFavStars(snap.val()||{});
+  });
+}
+
+// ── Sauvegarder notes ──────────────────────────
+document.getElementById('notes-save-btn').addEventListener('click',()=>{
+  if(!currentUser){ showPlayerAuthModal(); return; }
+  const txt=document.getElementById('notes-area').value;
+  fbDb.ref('players/'+currentUser.uid+'/notes').set(txt).then(()=>{
+    const ok=document.getElementById('notes-saved');
+    ok.style.opacity='1';
+    setTimeout(()=>{ ok.style.opacity='0'; },2000);
+  });
+});
+
+// ── Favoris ────────────────────────────────────
+function renderFavorites(favs){
+  const el=document.getElementById('fav-list'); if(!el) return;
+  const ids=Object.keys(favs).filter(id=>favs[id]);
+  if(!ids.length){ el.innerHTML='<div class="fav-empty">Aucun favori — clique sur ★ dans une fiche.</div>'; return; }
+  let html='';
+  ids.forEach(id=>{
+    const m=markers[id]; if(!m) return;
+    const cat=CATS[m.category]||{hex:'#888'};
+    html+=`<div class="fav-item" data-id="${id}">
+      <span class="fav-item-dot" style="background:${cat.hex}"></span>
+      <span class="fav-item-name">${m.name}</span>
+      <button class="fav-item-del" onclick="removeFavorite('${id}')" title="Retirer">✕</button>
+    </div>`;
+  });
+  el.innerHTML=html;
+  el.querySelectorAll('.fav-item').forEach(item=>{
+    item.addEventListener('click',e=>{
+      if(e.target.classList.contains('fav-item-del')) return;
+      const m=markers[item.dataset.id]; if(!m) return;
+      if(scene){ scene.filterToMarker(m.id); scene.flyTo(m.x,m.y); }
+      setTimeout(()=>showPopup(m),720);
+    });
+  });
+}
+
+function updateAllFavStars(favs){
+  const btn=document.getElementById('popup-fav-btn');
+  if(btn && openId){ btn.textContent=favs[openId]?'★':'☆'; btn.classList.toggle('active',!!favs[openId]); }
+}
+
+function toggleFavorite(markerId){
+  if(!currentUser){ showPlayerAuthModal(); return; }
+  const ref=fbDb.ref('players/'+currentUser.uid+'/favorites/'+markerId);
+  ref.once('value', snap=>{
+    if(snap.val()){ ref.remove(); } else { ref.set(true); }
+  });
+}
+
+function removeFavorite(markerId){
+  if(!currentUser) return;
+  fbDb.ref('players/'+currentUser.uid+'/favorites/'+markerId).remove();
+}
+
+// ── Bouton étoile dans popup ───────────────────
+document.getElementById('popup-fav-btn').addEventListener('click', e=>{
+  e.stopPropagation();
+  if(openId) toggleFavorite(openId);
+});
+
+// Mettre à jour l'étoile quand on ouvre une popup
+const _origShowPopup = showPopup;
+function showPopup(m){
+  _origShowPopup(m);
+  const btn=document.getElementById('popup-fav-btn');
+  if(!btn) return;
+  if(!currentUser){ btn.style.display='none'; return; }
+  btn.style.display='block';
+  fbDb.ref('players/'+currentUser.uid+'/favorites/'+m.id).once('value', snap=>{
+    btn.textContent=snap.val()?'★':'☆';
+    btn.classList.toggle('active',!!snap.val());
+  });
+}
+
 
 // ── ESC global ──
 document.addEventListener('keydown',e=>{
