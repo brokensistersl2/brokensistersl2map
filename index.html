@@ -320,10 +320,12 @@ body{background:#07040a;overflow:hidden;font-family:'Cinzel',serif;width:100vw;h
 <div id="modal-bg">
   <div class="modal" id="login-modal">
     <h2>⚔ ACCÈS ADMINISTRATEUR</h2>
-    <p class="sub">Entrez le mot de passe pour accéder au mode d'édition.</p>
+    <p class="sub">Connectez-vous avec votre compte administrateur Firebase.</p>
+    <label>EMAIL</label>
+    <input type="email" id="admin-email-input" placeholder="admin@email.com">
     <label>MOT DE PASSE</label>
     <input type="password" id="pass-input" placeholder="••••••••••••">
-    <div id="pass-error">Mot de passe incorrect — réessayez.</div>
+    <div id="pass-error">Identifiants incorrects ou accès refusé.</div>
     <div class="modal-btns">
       <button class="btn-sec" id="btn-pass-cancel">ANNULER</button>
       <button class="btn-pri" id="btn-pass-ok">CONNEXION</button>
@@ -476,7 +478,7 @@ body{background:#07040a;overflow:hidden;font-family:'Cinzel',serif;width:100vw;h
 // ══════════════════════════════════════════════════════
 //  CONFIGURATION
 // ══════════════════════════════════════════════════════
-const ADMIN_PASS = 'brokensister6969';
+// Mot de passe admin supprimé — authentification via Firebase Auth
 const MAP_IMAGE_URL = 'https://i.ibb.co/W4CPYBBt/Broken-Sisters-carte-du-monde-Lineage-2-Roleplay.png';
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyCeeEAA3Er43e8TtAv9Xbok9wXgq-7lg7o",
@@ -1077,6 +1079,10 @@ function doLogout(){
   document.getElementById('admin-toggle').textContent='⚙ ADMIN';
   document.getElementById('popup-footer').style.display='none';
   updateRumeursAdminForm();
+  // Déconnecter aussi de Firebase Auth si c'était l'admin
+  if(fbReady && firebase.auth().currentUser && !currentUser){
+    firebase.auth().signOut();
+  }
 }
 
 function doLogin(){
@@ -1090,18 +1096,53 @@ function doLogin(){
 
 document.getElementById('btn-pass-ok').addEventListener('click',checkPass);
 document.getElementById('pass-input').addEventListener('keydown',e=>{ if(e.key==='Enter') checkPass(); });
+document.getElementById('admin-email-input').addEventListener('keydown',e=>{ if(e.key==='Enter') document.getElementById('pass-input').focus(); });
 document.getElementById('btn-pass-cancel').addEventListener('click',closeAllModals);
 
 function checkPass(){
-  if(document.getElementById('pass-input').value===ADMIN_PASS){
-    document.getElementById('pass-input').value='';
-    document.getElementById('pass-error').style.display='none';
-    doLogin();
-  } else {
+  const email = document.getElementById('admin-email-input').value.trim();
+  const pass  = document.getElementById('pass-input').value;
+  if(!email||!pass){
     document.getElementById('pass-error').style.display='block';
-    document.getElementById('pass-input').value='';
-    document.getElementById('pass-input').focus();
+    document.getElementById('pass-error').textContent='Remplis tous les champs.';
+    return;
   }
+  if(!fbReady){ alert('Firebase non disponible.'); return; }
+
+  document.getElementById('btn-pass-ok').textContent='…';
+  document.getElementById('btn-pass-ok').disabled=true;
+
+  firebase.auth().signInWithEmailAndPassword(email, pass)
+    .then(cred=>{
+      // Vérifier que cet UID est bien dans la liste des admins
+      return fbDb.ref('admins/'+cred.user.uid).once('value').then(snap=>{
+        if(snap.val()===true){
+          document.getElementById('pass-input').value='';
+          document.getElementById('admin-email-input').value='';
+          document.getElementById('pass-error').style.display='none';
+          doLogin();
+        } else {
+          // Connecté Firebase mais pas admin → déconnecter
+          firebase.auth().signOut();
+          document.getElementById('pass-error').textContent='Compte non autorisé comme administrateur.';
+          document.getElementById('pass-error').style.display='block';
+          document.getElementById('pass-input').value='';
+        }
+      });
+    })
+    .catch(err=>{
+      document.getElementById('pass-error').textContent=
+        err.code==='auth/wrong-password'||err.code==='auth/invalid-credential'
+          ?'Mot de passe incorrect.'
+          :err.code==='auth/user-not-found'?'Email introuvable.'
+          :'Erreur : '+err.message;
+      document.getElementById('pass-error').style.display='block';
+      document.getElementById('pass-input').value='';
+    })
+    .finally(()=>{
+      document.getElementById('btn-pass-ok').textContent='CONNEXION';
+      document.getElementById('btn-pass-ok').disabled=false;
+    });
 }
 
 document.getElementById('btn-place').addEventListener('click',()=>setAddMode(!addMode));
