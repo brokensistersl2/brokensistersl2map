@@ -552,6 +552,16 @@ function getLootData(markerName){
   return null;
 }
 
+const API_BASE = 'https://broken-sisters-backend.vercel.app'; // URL du backend Vercel
+
+async function apiCall(path, options={}){
+  let token=null;
+  try{ if(firebase.auth().currentUser) token=await firebase.auth().currentUser.getIdToken(); }catch(e){}
+  const headers={'Content-Type':'application/json',...(options.headers||{})};
+  if(token) headers['Authorization']='Bearer '+token;
+  return fetch(API_BASE+path,{...options,headers});
+}
+
 // ══════════════════════════════════════════════════════
 //  CATÉGORIES (8 au total)
 // ══════════════════════════════════════════════════════
@@ -837,24 +847,17 @@ function initData(){
   const s1=document.createElement('script'), s2=document.createElement('script');
   s1.src='https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js';
   s1.onload=()=>{
-    const s2=document.createElement('script');
     const s3=document.createElement('script');
-    s2.src='https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js';
     s3.src='https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js';
-    let loaded=0;
-    const tryInit=()=>{
-      loaded++;
-      if(loaded<2) return;
+    s3.onload=()=>{
       try{
         firebase.initializeApp(FIREBASE_CONFIG);
-        fbDb=firebase.database(); fbReady=true;
-        setSyncPill('loading'); initFirebase();
+        setSyncPill('online');
+        initMarkersFromAPI();
         initPlayerAuth();
       }catch(e){ initLocal(); }
     };
-    s2.onload=tryInit; s2.onerror=()=>initLocal();
-    s3.onload=tryInit; s3.onerror=()=>{ loaded++; if(loaded>=2) tryInit(); };
-    document.head.appendChild(s2);
+    s3.onerror=()=>initLocal();
     document.head.appendChild(s3);
   };
   s1.onerror=()=>initLocal();
@@ -868,41 +871,47 @@ function initLocal(){
   updateMarkerList();
 }
 
-function initFirebase(){
-  fbDb.ref('markers').on('value', snap=>{
-    setSyncPill('online');
-    const data=snap.val()||{};
-    Object.keys(markers).forEach(id=>{ if(!data[id]&&scene) scene.removeMarkerSprite(id); });
-    Object.entries(data).forEach(([id,m])=>{
-      if(!markers[id]&&scene) scene.renderMarker(m);
-      else if(markers[id]&&JSON.stringify(markers[id])!==JSON.stringify(m)&&scene){
-        scene.refreshMarkerSprite(m);
-        if(openId===id) showPopup(m);
-      }
-    });
-    markers=data;
-    updateSearchResults();
-  },()=>initLocal());
+function initMarkersFromAPI(){
+  fetch(API_BASE+'/api/markers')
+    .then(r=>r.json())
+    .then(data=>{
+      setSyncPill('online');
+      Object.keys(markers).forEach(id=>{ if(!data[id]&&scene) scene.removeMarkerSprite(id); });
+      Object.entries(data).forEach(([id,m])=>{
+        if(!markers[id]&&scene) scene.renderMarker(m);
+        else if(markers[id]&&JSON.stringify(markers[id])!==JSON.stringify(m)&&scene){
+          scene.refreshMarkerSprite(m);
+          if(openId===id) showPopup(m);
+        }
+      });
+      markers=data;
+      updateSearchResults();
+    })
+    .catch(()=>initLocal());
+  // Polling toutes les 15s pour garder la synchro
+  setInterval(()=>{
+    fetch(API_BASE+'/api/markers').then(r=>r.json()).then(data=>{
+      Object.keys(markers).forEach(id=>{ if(!data[id]&&scene) scene.removeMarkerSprite(id); });
+      Object.entries(data).forEach(([id,m])=>{
+        if(!markers[id]&&scene) scene.renderMarker(m);
+        else if(markers[id]&&JSON.stringify(markers[id])!==JSON.stringify(m)&&scene) scene.refreshMarkerSprite(m);
+      });
+      markers=data;
+      updateMarkerList();
+    }).catch(()=>{});
+  }, 15000);
 }
 
 function dataSave(m){
-  if(fbReady&&fbDb){ fbDb.ref('markers/'+m.id).set(m); }
-  else{
-    markers[m.id]=m;
-    localStorage.setItem(LS_KEY,JSON.stringify(markers));
-    if(scene){ scene.refreshMarkerSprite(m); if(openId===m.id) showPopup(m); }
-    updateSearchResults();
-  }
+  apiCall('/api/markers',{method:'POST',body:JSON.stringify(m)})
+    .then(()=>{ markers[m.id]=m; if(scene){ scene.refreshMarkerSprite(m); if(openId===m.id) showPopup(m); } updateSearchResults(); })
+    .catch(e=>console.error('Erreur save marker:',e));
 }
 
 function dataDelete(id){
-  if(fbReady&&fbDb){ fbDb.ref('markers/'+id).remove(); }
-  else{
-    delete markers[id];
-    localStorage.setItem(LS_KEY,JSON.stringify(markers));
-    if(scene) scene.removeMarkerSprite(id);
-    updateSearchResults();
-  }
+  apiCall('/api/markers/'+id,{method:'DELETE'})
+    .then(()=>{ delete markers[id]; if(scene) scene.removeMarkerSprite(id); updateSearchResults(); })
+    .catch(e=>console.error('Erreur delete marker:',e));
 }
 
 // ══════════════════════════════════════════════════════
@@ -1079,10 +1088,8 @@ function doLogout(){
   document.getElementById('admin-toggle').textContent='⚙ ADMIN';
   document.getElementById('popup-footer').style.display='none';
   updateRumeursAdminForm();
-  // Déconnecter aussi de Firebase Auth si c'était l'admin
-  if(fbReady && firebase.auth().currentUser && !currentUser){
-    firebase.auth().signOut();
-  }
+  // Déconnecter de Firebase Auth admin
+  try{ if(firebase.auth().currentUser && !currentUser) firebase.auth().signOut(); }catch(e){}
 }
 
 function doLogin(){
@@ -1107,27 +1114,27 @@ function checkPass(){
     document.getElementById('pass-error').textContent='Remplis tous les champs.';
     return;
   }
-  if(!fbReady){ alert('Firebase non disponible.'); return; }
-
   document.getElementById('btn-pass-ok').textContent='…';
   document.getElementById('btn-pass-ok').disabled=true;
 
   firebase.auth().signInWithEmailAndPassword(email, pass)
     .then(cred=>{
-      // Vérifier que cet UID est bien dans la liste des admins
-      return fbDb.ref('admins/'+cred.user.uid).once('value').then(snap=>{
-        if(snap.val()===true){
-          document.getElementById('pass-input').value='';
-          document.getElementById('admin-email-input').value='';
-          document.getElementById('pass-error').style.display='none';
-          doLogin();
-        } else {
-          // Connecté Firebase mais pas admin → déconnecter
-          firebase.auth().signOut();
-          document.getElementById('pass-error').textContent='Compte non autorisé comme administrateur.';
-          document.getElementById('pass-error').style.display='block';
-          document.getElementById('pass-input').value='';
-        }
+      return cred.user.getIdToken().then(token=>{
+        return fetch('https://broken-sisters-backend.vercel.app/api/admin/check',{
+          headers:{'Authorization':'Bearer '+token}
+        }).then(r=>r.json()).then(data=>{
+          if(data.isAdmin){
+            document.getElementById('pass-input').value='';
+            document.getElementById('admin-email-input').value='';
+            document.getElementById('pass-error').style.display='none';
+            doLogin();
+          } else {
+            firebase.auth().signOut();
+            document.getElementById('pass-error').textContent='Compte non autorisé comme administrateur.';
+            document.getElementById('pass-error').style.display='block';
+            document.getElementById('pass-input').value='';
+          }
+        });
       });
     })
     .catch(err=>{
@@ -1232,12 +1239,15 @@ function showPopup(m){
   // ── Étoile favori ──
   const favBtn=document.getElementById('popup-fav-btn');
   if(favBtn){
-    if(currentUser && fbReady){
+    if(currentUser){
       favBtn.style.display='block';
-      fbDb.ref('players/'+currentUser.uid+'/favorites/'+fresh.id).once('value',snap=>{
-        favBtn.textContent=snap.val()?'★':'☆';
-        favBtn.classList.toggle('active',!!snap.val());
+      fetch(API_BASE+'/api/players/'+currentUser.uid+'/favorites',{
+        headers:{Authorization:'Bearer __TOKEN__'}
       });
+      // Lire les favoris depuis le cache local
+      const favs=JSON.parse(localStorage.getItem('bs_favs_'+currentUser.uid)||'{}');
+      favBtn.textContent=favs[fresh.id]?'★':'☆';
+      favBtn.classList.toggle('active',!!favs[fresh.id]);
     } else {
       favBtn.style.display='none';
     }
@@ -1275,31 +1285,20 @@ function gradeFromLabel(label){
   return 'X';
 }
 
-// ══ LOOT CUSTOM (stocké dans Firebase / localStorage) ══════════
+// ══ LOOT CUSTOM (via API backend) ══════════════════════════════
 const LS_CUSTOM = 'bs_custom_loot_v1';
-let currentLootMarker = null; // marker ouvert dans le panel loot
+let currentLootMarker = null;
 
 function customLootSave(markerId, data){
-  if(fbReady&&fbDb){
-    fbDb.ref('custom_loot/'+markerId).set(data);
-  } else {
-    try{
-      const all = JSON.parse(localStorage.getItem(LS_CUSTOM)||'{}');
-      all[markerId] = data;
-      localStorage.setItem(LS_CUSTOM, JSON.stringify(all));
-    }catch(e){}
-  }
+  apiCall('/api/custom-loot/'+markerId,{method:'POST',body:JSON.stringify(data)})
+    .catch(e=>console.error('Erreur save loot:',e));
 }
 
 function customLootGet(markerId, cb){
-  if(fbReady&&fbDb){
-    fbDb.ref('custom_loot/'+markerId).once('value', snap=>cb(snap.val()||{loot:[],spoil:[]}));
-  } else {
-    try{
-      const all = JSON.parse(localStorage.getItem(LS_CUSTOM)||'{}');
-      cb(all[markerId]||{loot:[],spoil:[]});
-    }catch(e){ cb({loot:[],spoil:[]}); }
-  }
+  fetch(API_BASE+'/api/custom-loot/'+markerId)
+    .then(r=>r.json())
+    .then(data=>cb(data||{loot:[],spoil:[]}))
+    .catch(()=>cb({loot:[],spoil:[]}));
 }
 
 function buildItemsHtml(items, custom, type){
@@ -1605,13 +1604,14 @@ function doPlayerLogin(){
   const pass   = document.getElementById('login-pass').value;
   if(!pseudo||!pass){ showAuthErr('Remplis tous les champs.'); return; }
   // Chercher l'email lié à ce pseudo dans la DB
-  fbDb.ref('pseudos/'+pseudo.toLowerCase()).once('value', snap=>{
-    const email = snap.val();
+  fetch(API_BASE+'/api/players/pseudos/'+encodeURIComponent(pseudo.toLowerCase()))
+    .then(r=>r.json()).then(data=>{
+    const email = data.email;
     if(!email){ showAuthErr('Pseudo introuvable.'); return; }
     firebase.auth().signInWithEmailAndPassword(email, pass)
       .then(()=>{ closeAllModals(); setTimeout(()=>openPlayerPanel(),200); })
       .catch(err=>showAuthErr(err.message==='Firebase: Error (auth/wrong-password).'?'Mot de passe incorrect.':'Erreur : '+err.message));
-  });
+  }).catch(()=>showAuthErr('Erreur réseau.'));
 }
 
 // ── Inscription ────────────────────────────────
@@ -1621,15 +1621,19 @@ function doPlayerRegister(){
   const pass   = document.getElementById('reg-pass').value;
   if(!pseudo||!email||!pass){ showAuthErr('Remplis tous les champs.'); return; }
   if(pass.length<6){ showAuthErr('Mot de passe trop court (6 caractères min).'); return; }
-  // Vérifier que le pseudo n'est pas déjà pris
-  fbDb.ref('pseudos/'+pseudo.toLowerCase()).once('value', snap=>{
-    if(snap.val()){ showAuthErr('Ce pseudo est déjà utilisé.'); return; }
+  // Vérifier que le pseudo n'est pas déjà pris via API
+  fetch(API_BASE+'/api/players/pseudos/'+encodeURIComponent(pseudo.toLowerCase()))
+    .then(r=>r.json()).then(data=>{
+    if(data.taken){ showAuthErr('Ce pseudo est déjà utilisé.'); return; }
     firebase.auth().createUserWithEmailAndPassword(email, pass)
       .then(cred=>{
         return Promise.all([
           cred.user.updateProfile({displayName: pseudo}),
-          fbDb.ref('pseudos/'+pseudo.toLowerCase()).set(email),
-          fbDb.ref('players/'+cred.user.uid+'/pseudo').set(pseudo)
+          cred.user.getIdToken().then(token=>fetch(API_BASE+'/api/players/register',{
+            method:'POST',
+            headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+            body:JSON.stringify({pseudo,email})
+          }))
         ]);
       })
       .then(()=>{ closeAllModals(); setTimeout(()=>openPlayerPanel(),200); })
@@ -1681,21 +1685,24 @@ function loadPlayerData(){
   if(!currentUser) return;
   const uid=currentUser.uid;
   // Notes
-  fbDb.ref('players/'+uid+'/notes').once('value', snap=>{
-    document.getElementById('notes-area').value = snap.val()||'';
-  });
+  apiCall('/api/players/'+uid+'/notes')
+    .then(r=>r.json()).then(d=>{ document.getElementById('notes-area').value=d.data||''; })
+    .catch(()=>{});
   // Favoris
-  fbDb.ref('players/'+uid+'/favorites').on('value', snap=>{
-    renderFavorites(snap.val()||{});
-    updateAllFavStars(snap.val()||{});
-  });
+  apiCall('/api/players/'+uid+'/favorites')
+    .then(r=>r.json()).then(d=>{
+      const favs=d.data||{};
+      localStorage.setItem('bs_favs_'+uid, JSON.stringify(favs));
+      renderFavorites(favs);
+      updateAllFavStars(favs);
+    }).catch(()=>{});
 }
 
 // ── Sauvegarder notes ──────────────────────────
 document.getElementById('notes-save-btn').addEventListener('click',()=>{
   if(!currentUser){ showPlayerAuthModal(); return; }
   const txt=document.getElementById('notes-area').value;
-  fbDb.ref('players/'+currentUser.uid+'/notes').set(txt).then(()=>{
+  apiCall('/api/players/'+currentUser.uid+'/notes',{method:'POST',body:JSON.stringify({data:txt})}).then(()=>{
     const ok=document.getElementById('notes-saved');
     ok.style.opacity='1';
     setTimeout(()=>{ ok.style.opacity='0'; },2000);
@@ -1735,15 +1742,24 @@ function updateAllFavStars(favs){
 
 function toggleFavorite(markerId){
   if(!currentUser){ showPlayerAuthModal(); return; }
-  const ref=fbDb.ref('players/'+currentUser.uid+'/favorites/'+markerId);
-  ref.once('value', snap=>{
-    if(snap.val()){ ref.remove(); } else { ref.set(true); }
-  });
+  const uid=currentUser.uid;
+  const favs=JSON.parse(localStorage.getItem('bs_favs_'+uid)||'{}');
+  if(favs[markerId]){ delete favs[markerId]; } else { favs[markerId]=true; }
+  localStorage.setItem('bs_favs_'+uid,JSON.stringify(favs));
+  apiCall('/api/players/'+uid+'/favorites',{method:'POST',body:JSON.stringify({data:favs})})
+    .then(()=>{ renderFavorites(favs); updateAllFavStars(favs); })
+    .catch(()=>{});
 }
 
 function removeFavorite(markerId){
   if(!currentUser) return;
-  fbDb.ref('players/'+currentUser.uid+'/favorites/'+markerId).remove();
+  const uid=currentUser.uid;
+  const favs=JSON.parse(localStorage.getItem('bs_favs_'+uid)||'{}');
+  delete favs[markerId];
+  localStorage.setItem('bs_favs_'+uid,JSON.stringify(favs));
+  apiCall('/api/players/'+uid+'/favorites',{method:'POST',body:JSON.stringify({data:favs})})
+    .then(()=>{ renderFavorites(favs); updateAllFavStars(favs); })
+    .catch(()=>{});
 }
 
 // ── Bouton étoile dans popup ───────────────────
@@ -1791,11 +1807,13 @@ function updateRumeursAdminForm(){
 
 // Charger les rumeurs depuis Firebase
 function loadRumeurs(){
-  if(!fbReady||!fbDb){ renderRumeurs({}); return; }
-  fbDb.ref('rumeurs').orderByChild('ts').on('value', snap=>{
-    const data=snap.val()||{};
-    renderRumeurs(data);
-  });
+  fetch(API_BASE+'/api/rumeurs')
+    .then(r=>r.json()).then(data=>renderRumeurs(data||{}))
+    .catch(()=>renderRumeurs({}));
+  // Polling toutes les 30s
+  setInterval(()=>{
+    fetch(API_BASE+'/api/rumeurs').then(r=>r.json()).then(data=>renderRumeurs(data||{})).catch(()=>{});
+  },30000);
 }
 
 function renderRumeurs(data){
@@ -1820,9 +1838,9 @@ function renderRumeurs(data){
 }
 
 function deleteRumeur(id){
-  if(!isAdmin||!fbDb) return;
+  if(!isAdmin) return;
   if(!confirm('Supprimer cette rumeur ?')) return;
-  fbDb.ref('rumeurs/'+id).remove();
+  apiCall('/api/rumeurs/'+id,{method:'DELETE'}).then(()=>loadRumeurs()).catch(e=>console.error(e));
 }
 
 // Publier une rumeur
@@ -1832,20 +1850,10 @@ document.getElementById('rumeurs-post-btn').addEventListener('click',()=>{
   if(!text) return;
   const img  = document.getElementById('rumeurs-img-url').value.trim();
   const id   = Date.now().toString();
-  fbDb.ref('rumeurs/'+id).set({text, img:img||'', ts:Date.now()}).then(()=>{
-    document.getElementById('rumeurs-text').value='';
-    document.getElementById('rumeurs-img-url').value='';
-  });
+// handled above
 });
 
-// Notification "new" quand une rumeur arrive et le panel est fermé
-if(fbReady&&fbDb){
-  fbDb.ref('rumeurs').orderByChild('ts').limitToLast(1).on('child_added', snap=>{
-    if(!rumeursPanelOpen && snap.val().ts > Date.now()-5000){
-      document.getElementById('rumeurs-toggle').classList.add('has-new');
-    }
-  });
-}
+// Notification handled via polling in loadRumeurs
 
 // Mettre à jour le formulaire admin si login/logout
 const _origDoLogin  = doLogin;
