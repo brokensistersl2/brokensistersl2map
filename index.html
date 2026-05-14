@@ -843,29 +843,33 @@ function setSyncPill(mode){
 }
 
 function initData(){
-  if(!FIREBASE_CONFIG.apiKey){ initLocal(); return; }
-  const s1=document.createElement('script'), s2=document.createElement('script');
+  // Charger les markers immédiatement (pas besoin de Firebase)
+  initMarkersFromAPI();
+
+  // Charger Firebase Auth séparément pour admin/joueur
+  if(!FIREBASE_CONFIG.apiKey){ return; }
+  const s1=document.createElement('script');
   s1.src='https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js';
   s1.onload=()=>{
     const s3=document.createElement('script');
     s3.src='https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js';
     s3.onload=()=>{
       try{
-        firebase.initializeApp(FIREBASE_CONFIG);
-        setSyncPill('online');
-        initMarkersFromAPI();
+        if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
         initPlayerAuth();
-      }catch(e){ initLocal(); }
+      }catch(e){ console.error('Firebase Auth error:',e); }
     };
-    s3.onerror=()=>initLocal();
+    s3.onerror=()=>{ console.warn('Firebase Auth non disponible'); };
     document.head.appendChild(s3);
   };
-  s1.onerror=()=>initLocal();
+  s1.onerror=()=>{ console.warn('Firebase non disponible'); };
   document.head.appendChild(s1);
 }
 
 function initLocal(){
   setSyncPill('local');
+  // Ne pas écraser si des markers ont déjà été chargés depuis l'API
+  if(Object.keys(markers).length > 0) return;
   try{ markers=JSON.parse(localStorage.getItem(LS_KEY))||{}; }catch(e){ markers={}; }
   Object.values(markers).forEach(m=>{ if(scene) scene.renderMarker(m); });
   updateMarkerList();
@@ -1846,12 +1850,15 @@ function deleteRumeur(id){
 
 // Publier une rumeur
 document.getElementById('rumeurs-post-btn').addEventListener('click',()=>{
-  if(!isAdmin||!fbDb) return;
+  if(!isAdmin) return;
   const text = document.getElementById('rumeurs-text').value.trim();
   if(!text) return;
-  const img  = document.getElementById('rumeurs-img-url').value.trim();
-  const id   = Date.now().toString();
-// handled above
+  const img = document.getElementById('rumeurs-img-url').value.trim();
+  apiCall('/api/rumeurs',{method:'POST',body:JSON.stringify({text,img:img||''})}).then(()=>{
+    document.getElementById('rumeurs-text').value='';
+    document.getElementById('rumeurs-img-url').value='';
+    loadRumeurs();
+  }).catch(e=>console.error(e));
 });
 
 // Notification handled via polling in loadRumeurs
