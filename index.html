@@ -871,33 +871,34 @@ function initLocal(){
   updateMarkerList();
 }
 
+function applyMarkersData(data){
+  setSyncPill('online');
+  Object.keys(markers).forEach(id=>{ if(!data[id]&&scene) scene.removeMarkerSprite(id); });
+  Object.entries(data).forEach(([id,m])=>{
+    if(!markers[id]&&scene) scene.renderMarker(m);
+    else if(markers[id]&&JSON.stringify(markers[id])!==JSON.stringify(m)&&scene){
+      scene.refreshMarkerSprite(m); if(openId===id) showPopup(m);
+    }
+  });
+  markers=data;
+  updateSearchResults();
+}
+
+function waitForSceneThen(fn){
+  // Attend que la scène Phaser soit prête
+  if(scene){ fn(); return; }
+  const t=setInterval(()=>{ if(scene){ clearInterval(t); fn(); } },100);
+}
+
 function initMarkersFromAPI(){
   fetch(API_BASE+'/api/markers')
     .then(r=>r.json())
-    .then(data=>{
-      setSyncPill('online');
-      Object.keys(markers).forEach(id=>{ if(!data[id]&&scene) scene.removeMarkerSprite(id); });
-      Object.entries(data).forEach(([id,m])=>{
-        if(!markers[id]&&scene) scene.renderMarker(m);
-        else if(markers[id]&&JSON.stringify(markers[id])!==JSON.stringify(m)&&scene){
-          scene.refreshMarkerSprite(m);
-          if(openId===id) showPopup(m);
-        }
-      });
-      markers=data;
-      updateSearchResults();
-    })
+    .then(data=>{ waitForSceneThen(()=>applyMarkersData(data)); })
     .catch(()=>initLocal());
-  // Polling toutes les 15s pour garder la synchro
+  // Polling toutes les 15s
   setInterval(()=>{
     fetch(API_BASE+'/api/markers').then(r=>r.json()).then(data=>{
-      Object.keys(markers).forEach(id=>{ if(!data[id]&&scene) scene.removeMarkerSprite(id); });
-      Object.entries(data).forEach(([id,m])=>{
-        if(!markers[id]&&scene) scene.renderMarker(m);
-        else if(markers[id]&&JSON.stringify(markers[id])!==JSON.stringify(m)&&scene) scene.refreshMarkerSprite(m);
-      });
-      markers=data;
-      updateMarkerList();
+      if(scene) applyMarkersData(data);
     }).catch(()=>{});
   }, 15000);
 }
