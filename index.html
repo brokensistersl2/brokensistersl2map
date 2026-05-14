@@ -247,7 +247,12 @@ body{background:#07040a;overflow:hidden;font-family:'Cinzel',serif;width:100vw;h
 #rumeurs-list::-webkit-scrollbar-thumb{background:rgba(176,111,232,0.2);border-radius:2px}
 .rumeur-card{background:rgba(255,255,255,0.03);border:1px solid rgba(176,111,232,0.15);border-radius:6px;margin-bottom:14px;overflow:hidden;transition:border-color .2s}
 .rumeur-card:hover{border-color:rgba(176,111,232,0.35)}
-.rumeur-img{width:100%;max-height:160px;object-fit:cover;display:block}
+.rumeur-img{width:100%;max-height:160px;object-fit:cover;display:block;cursor:pointer;transition:opacity .2s}
+.rumeur-img:hover{opacity:0.85}
+#img-lightbox{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,0.92);display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);cursor:zoom-out}
+#img-lightbox img{max-width:92vw;max-height:92vh;object-fit:contain;border-radius:4px;box-shadow:0 0 60px rgba(0,0,0,0.8)}
+#img-lightbox-close{position:fixed;top:18px;right:24px;background:none;border:none;color:#fff;font-size:28px;cursor:pointer;opacity:0.7;transition:opacity .15s;z-index:901}
+#img-lightbox-close:hover{opacity:1}
 .rumeur-body{padding:12px 14px}
 .rumeur-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
 .rumeur-date{font-family:'Crimson Text',serif;font-size:11px;color:#5a4060;font-style:italic}
@@ -1830,7 +1835,7 @@ function renderRumeurs(data){
   }
   el.innerHTML = items.map(([id,r])=>{
     const date = new Date(r.ts).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
-    const img  = r.img ? `<img class="rumeur-img" src="${r.img}" alt="" onerror="this.style.display='none'">` : '';
+    const img  = r.img ? `<img class="rumeur-img" src="${r.img}" alt="" onclick="openLightbox(this.src)" onerror="this.style.display='none'">` : '';
     const del  = isAdmin ? `<button class="rumeur-del" onclick="deleteRumeur('${id}')">✕ Supprimer</button>` : '';
     return `<div class="rumeur-card">
       ${img}
@@ -1867,9 +1872,28 @@ document.getElementById('rumeurs-post-btn').addEventListener('click',()=>{
 const _origDoLogin  = doLogin;
 const _origDoLogout = doLogout;
 // Override via wrapper - on patch directement après doLogin/doLogout
+
+// ── Lightbox image ──────────────────────────────
+function openLightbox(src){
+  const lb = document.getElementById('img-lightbox');
+  document.getElementById('img-lightbox-img').src = src;
+  lb.style.display = 'flex';
+  document.addEventListener('keydown', _lbEsc);
+}
+function closeLightbox(){
+  document.getElementById('img-lightbox').style.display = 'none';
+  document.getElementById('img-lightbox-img').src = '';
+  document.removeEventListener('keydown', _lbEsc);
+}
+function _lbEsc(e){ if(e.key==='Escape') closeLightbox(); }
+
 // ── ESC global ──
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){ closePopup(); closeAllModals(); if(addMode) setAddMode(false); }
 });
-</script></body>
+</script><div id="img-lightbox" onclick="closeLightbox()">
+  <button id="img-lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="img-lightbox-img" src="" alt="">
+</div>
+</body>
 </html>
