@@ -1498,21 +1498,84 @@ function updateSearchResults(){
 function doSearch(){
   const q=document.getElementById('search-input').value.toLowerCase().trim();
   const el=document.getElementById('search-results');
-  if(!q){ el.style.display='none'; if(scene) scene.showAllMarkers(); return; }
-  const res=Object.values(markers).filter(m=>
-    m.name.toLowerCase().includes(q)||
-    (CATS[m.category]&&CATS[m.category].label.toLowerCase().includes(q))||
-    (m.desc&&m.desc.toLowerCase().includes(q))
-  ).slice(0,9);
-  if(!res.length){ el.innerHTML='<div class="search-empty">Aucun résultat trouvé…</div>'; el.style.display='block'; return; }
-  el.innerHTML=res.map(m=>`<div class="search-item" data-id="${m.id}"><span class="s-dot" style="background:${(CATS[m.category]||{hex:'#888'}).hex}"></span><div><div class="s-name">${m.name}</div><div class="s-cat">${(CATS[m.category]||{label:'???'}).label}</div></div></div>`).join('');
+
+  if(!q){
+    el.style.display='none';
+    if(scene) scene.showAllMarkers();
+    return;
+  }
+
+  // ── Recherche : nom + catégorie + description + items loot/spoil ──
+  const res=[];
+  Object.values(markers).forEach(m=>{
+    const nameMatch  = m.name.toLowerCase().includes(q);
+    const catMatch   = CATS[m.category]&&CATS[m.category].label.toLowerCase().includes(q);
+    const descMatch  = m.desc&&m.desc.toLowerCase().includes(q);
+
+    // Cherche dans les données de loot/spoil du MOB_LOOT
+    const itemTags=[];
+    const ld=getLootData(m.name);
+    if(ld){
+      if(ld.loot.some(i=>i.toLowerCase().includes(q)))  itemTags.push('DROP');
+      if(ld.spoil.some(i=>i.toLowerCase().includes(q))) itemTags.push('SPOIL');
+    }
+
+    if(nameMatch||catMatch||descMatch||itemTags.length){
+      res.push({m, nameMatch, itemTags});
+    }
+  });
+
+  // ── Filtre la carte : affiche TOUS les markers correspondants ──
+  if(scene){
+    if(res.length){
+      const ids=new Set(res.map(r=>r.m.id));
+      Object.keys(scene.sprites).forEach(sid=>{
+        const v=ids.has(sid);
+        scene.sprites[sid].sprite.setVisible(v);
+        scene.sprites[sid].glow.setVisible(v);
+      });
+    } else {
+      scene.showAllMarkers();
+    }
+  }
+
+  if(!res.length){
+    el.innerHTML='<div class="search-empty">Aucun résultat trouvé…</div>';
+    el.style.display='block';
+    return;
+  }
+
+  // ── Dropdown : 12 premiers résultats ──
+  const limited=res.slice(0,12);
+  el.innerHTML=limited.map(({m,nameMatch,itemTags})=>{
+    const cat=CATS[m.category]||{hex:'#888',label:'???'};
+    // Sous-ligne : catégorie OU badges DROP/SPOIL
+    let sub='';
+    if(itemTags.length&&!nameMatch){
+      const badges=itemTags.map(t=>`<span style="color:${t==='DROP'?'#FF6B35':'#4FC3F7'};background:rgba(255,255,255,0.06);padding:1px 5px;border-radius:2px;font-size:9px;letter-spacing:1px;margin-right:3px">${t}</span>`).join('');
+      sub=`<div style="margin-top:2px">${badges}</div>`;
+    } else {
+      sub=`<div class="s-cat">${cat.label}</div>`;
+    }
+    return `<div class="search-item" data-id="${m.id}">
+      <span class="s-dot" style="background:${cat.hex}"></span>
+      <div><div class="s-name">${m.name}</div>${sub}</div>
+    </div>`;
+  }).join('');
+
+  // Indicateur si plus de 12 résultats
+  if(res.length>12){
+    el.innerHTML+=`<div style="padding:7px 12px;font-family:'Crimson Text',serif;font-style:italic;color:#5a4820;font-size:11px;text-align:center">… et ${res.length-12} autre(s) visible(s) sur la carte</div>`;
+  }
+
+  // ── Clic sur un résultat : vole vers ce marker et ouvre le popup ──
   el.querySelectorAll('.search-item').forEach(item=>item.addEventListener('click',()=>{
     const m=markers[item.dataset.id]; if(!m) return;
-    document.getElementById('search-input').value=m.name;
-    document.getElementById('search-results').style.display='none';
-    if(scene) scene.filterToMarker(m.id);
-    showPopup(m);
+    el.style.display='none';
+    if(scene) scene.flyTo(m.x,m.y);
+    setTimeout(()=>showPopup(m),350);
   }));
+
   el.style.display='block';
 }
 
