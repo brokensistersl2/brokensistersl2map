@@ -1095,6 +1095,10 @@ function closePopup(){
   document.getElementById('marker-popup').style.display='none';
   openId=null;
   closeSelectionMenu();
+  if(scene){
+    if(document.getElementById('search-input').value.trim()) doSearch();
+    else scene.showAllMarkers();
+  }
 }
 
 function showModal(id){
@@ -1256,7 +1260,8 @@ function showPopup(m){
   } else { img.style.display='none'; }
   document.getElementById('popup-desc').textContent=fresh.desc||'';
   document.getElementById('popup-footer').style.display=isAdmin?'flex':'none';
-  positionPopup(fresh);
+  if(scene && !document.getElementById('search-input').value.trim()) scene.filterToMarker(fresh.id);
+positionPopup(fresh);
   document.getElementById('marker-popup').style.display='block';
   document.getElementById('popup-edit').onclick=()=>{ closePopup(); showMarkerModal(fresh); };
   document.getElementById('popup-delete').onclick=()=>{
@@ -1478,9 +1483,8 @@ function positionPopup(m){
 }
 
 document.getElementById('popup-close').addEventListener('click',()=>{
-  closePopup();
-  if(scene) scene.showAllMarkers();
   document.getElementById('search-input').value='';
+  closePopup();
 });
 
 // ── Recherche ──
