@@ -41,6 +41,8 @@ body{background:#07040a;overflow:hidden;font-family:'Cinzel',serif;width:100vw;h
 #admin-toggle{padding:0 14px;height:28px;border-radius:3px;background:rgba(201,153,42,0.08);border:1px solid rgba(180,120,30,0.3);color:#c9992a;cursor:pointer;font-size:11px;letter-spacing:2px;font-family:'Cinzel',serif;transition:all .2s;white-space:nowrap}
 #admin-toggle:hover{background:rgba(201,153,42,0.18);border-color:rgba(201,153,42,0.6)}
 #admin-toggle.active{background:rgba(201,153,42,0.2);border-color:#c9992a;color:#f0c040;box-shadow:0 0 8px rgba(201,153,42,0.25)}
+#btn-site{padding:0 14px;height:28px;border-radius:3px;background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.3);color:#00d4aa;cursor:pointer;font-size:11px;letter-spacing:2px;font-family:'Cinzel',serif;transition:all .2s;white-space:nowrap;text-decoration:none;display:flex;align-items:center}
+#btn-site:hover{background:rgba(0,212,170,0.18);border-color:rgba(0,212,170,0.6)}
 #btn-vote{padding:0 14px;height:28px;border-radius:3px;background:rgba(255,180,0,0.08);border:1px solid rgba(255,180,0,0.3);color:#ffb400;cursor:pointer;font-size:11px;letter-spacing:2px;font-family:'Cinzel',serif;transition:all .2s;white-space:nowrap}
 #btn-vote:hover{background:rgba(255,180,0,0.18);border-color:rgba(255,180,0,0.6)}
 #admin-bar{position:fixed;top:58px;left:0;right:0;z-index:190;height:44px;background:rgba(12,7,4,0.94);border-bottom:1px solid rgba(220,40,40,0.2);display:none;align-items:center;padding:0 16px;gap:10px;box-shadow:0 2px 12px rgba(0,0,0,0.5)}
@@ -111,6 +113,10 @@ body{background:#07040a;overflow:hidden;font-family:'Cinzel',serif;width:100vw;h
 .ml-level-badge{font-size:9px;font-family:'Cinzel',serif;letter-spacing:0.5px;white-space:nowrap;flex-shrink:0}
 /* ── Légende ── */
 #legend-wrap{position:fixed;bottom:16px;right:396px;z-index:160;display:flex;flex-direction:column;align-items:center;gap:0}
+#panel-toggle-btn{position:fixed;top:50%;right:380px;transform:translateY(-50%);z-index:150;width:24px;height:64px;background:rgba(8,5,12,0.92);border:1px solid rgba(180,120,30,0.35);border-right:none;border-radius:6px 0 0 6px;color:#c9992a;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:right 0.3s ease}
+#panel-toggle-btn.collapsed{right:0;border-right:1px solid rgba(180,120,30,0.35);border-radius:6px}
+#marker-list.collapsed{transform:translateX(100%)}
+#legend-wrap.collapsed{right:16px}
 #legend-logo-box{width:110px;height:90px;border-radius:6px 6px 0 0;border:2px solid rgba(180,120,30,0.45);border-bottom:none;background:rgba(8,5,12,0.9);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px}
 #legend{background:rgba(8,5,12,0.9);border:2px solid rgba(180,120,30,0.45);border-radius:0 0 6px 6px;padding:12px 18px;display:flex;flex-direction:column;gap:7px}
 .leg-row{display:flex;align-items:center;gap:10px}
@@ -249,7 +255,12 @@ body{background:#07040a;overflow:hidden;font-family:'Cinzel',serif;width:100vw;h
 #rumeurs-list::-webkit-scrollbar-thumb{background:rgba(176,111,232,0.2);border-radius:2px}
 .rumeur-card{background:rgba(255,255,255,0.03);border:1px solid rgba(176,111,232,0.15);border-radius:6px;margin-bottom:14px;overflow:hidden;transition:border-color .2s}
 .rumeur-card:hover{border-color:rgba(176,111,232,0.35)}
-.rumeur-img{width:100%;max-height:160px;object-fit:cover;display:block}
+.rumeur-img{width:100%;max-height:160px;object-fit:cover;display:block;cursor:pointer;transition:opacity .2s}
+.rumeur-img:hover{opacity:0.85}
+#img-lightbox{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,0.92);display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);cursor:zoom-out}
+#img-lightbox img{max-width:92vw;max-height:92vh;object-fit:contain;border-radius:4px;box-shadow:0 0 60px rgba(0,0,0,0.8)}
+#img-lightbox-close{position:fixed;top:18px;right:24px;background:none;border:none;color:#fff;font-size:28px;cursor:pointer;opacity:0.7;transition:opacity .15s;z-index:901}
+#img-lightbox-close:hover{opacity:1}
 .rumeur-body{padding:12px 14px}
 .rumeur-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
 .rumeur-date{font-family:'Crimson Text',serif;font-size:11px;color:#5a4060;font-style:italic}
@@ -291,6 +302,7 @@ body{background:#07040a;overflow:hidden;font-family:'Cinzel',serif;width:100vw;h
     <span id="zoom-label">100%</span>
     <button class="zoom-btn" id="btn-zoom-in">+</button>
     <button class="zoom-btn" id="btn-zoom-out">−</button>
+    <a id="btn-site" href="https://www.brokensisterslineage2.online" target="_blank" rel="noopener">🌐 SITE WEB</a>
     <button id="btn-vote" onclick="openVoteUrl()">⭐ VOTE</button>
     <button id="rumeurs-toggle">📜 RUMEURS</button>
     <button id="player-toggle">♟ JOUEUR</button>
@@ -436,6 +448,7 @@ body{background:#07040a;overflow:hidden;font-family:'Cinzel',serif;width:100vw;h
 </div>
 
 <!-- Panneau latéral droit -->
+<button id="panel-toggle-btn" title="Masquer/Afficher la liste" onclick="toggleMarkerList()">◀</button>
 <div id="marker-list">
   <div id="marker-list-title">✦ LIEUX ENREGISTRÉS ✦</div>
   <div id="marker-list-controls">
@@ -483,7 +496,8 @@ body{background:#07040a;overflow:hidden;font-family:'Cinzel',serif;width:100vw;h
 // ══════════════════════════════════════════════════════
 // Mot de passe admin supprimé — authentification via Firebase Auth
 const MAP_IMAGE_URL = 'https://i.ibb.co/W4CPYBBt/Broken-Sisters-carte-du-monde-Lineage-2-Roleplay.png';
-const VOTE_URL = 'https://serveur-prive.net/lineage-2/broken-sisters/vote'; // ← METS TON LIEN ICI
+const SITE_URL = 'https://www.brokensisterslineage2.online';
+const VOTE_URL = 'https://serveur-prive.net/lineage-2/broken-sisters/vote'; // ← METS TON LIEN DE VOTE ICI
 function openVoteUrl(){ window.open(VOTE_URL,'_blank','noopener'); }
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyCeeEAA3Er43e8TtAv9Xbok9wXgq-7lg7o",
@@ -1864,7 +1878,7 @@ function renderRumeurs(data){
   }
   el.innerHTML = items.map(([id,r])=>{
     const date = new Date(r.ts).toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
-    const img  = r.img ? `<img class="rumeur-img" src="${r.img}" alt="" onerror="this.style.display='none'">` : '';
+    const img  = r.img ? `<img class="rumeur-img" src="${r.img}" alt="" onclick="openLightbox(this.src)" onerror="this.style.display='none'">` : '';
     const del  = isAdmin ? `<button class="rumeur-del" onclick="deleteRumeur('${id}')">✕ Supprimer</button>` : '';
     return `<div class="rumeur-card">
       ${img}
@@ -1899,8 +1913,46 @@ const _origDoLogin  = doLogin;
 const _origDoLogout = doLogout;
 // Override via wrapper - on patch directement après doLogin/doLogout
 // ── ESC global ──
+function openLightbox(src){
+  var lb=document.getElementById('img-lightbox');
+  document.getElementById('img-lightbox-img').src=src;
+  lb.style.display='flex';
+  document.addEventListener('keydown',_lbEsc);
+}
+function closeLightbox(){
+  document.getElementById('img-lightbox').style.display='none';
+  document.getElementById('img-lightbox-img').src='';
+  document.removeEventListener('keydown',_lbEsc);
+}
+function _lbEsc(e){ if(e.key==='Escape') closeLightbox(); }
+
+(function(){
+  var siteBtn=document.getElementById('btn-site');
+  if(siteBtn&&typeof SITE_URL!=='undefined'&&SITE_URL){
+    siteBtn.href=SITE_URL;
+  }
+})();
+
+var listCollapsed=false;
+function toggleMarkerList(){
+  listCollapsed=!listCollapsed;
+  var panel=document.getElementById('marker-list');
+  var btn=document.getElementById('panel-toggle-btn');
+  var legend=document.getElementById('legend-wrap');
+  panel.classList.toggle('collapsed',listCollapsed);
+  btn.classList.toggle('collapsed',listCollapsed);
+  if(legend) legend.classList.toggle('collapsed',listCollapsed);
+  btn.textContent=listCollapsed?'▶':'◀';
+  btn.style.right=listCollapsed?'0px':'380px';
+}
+
 document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){ closePopup(); closeAllModals(); if(addMode) setAddMode(false); }
 });
-</script></body>
+</script>
+<div id="img-lightbox" onclick="closeLightbox()">
+  <button id="img-lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="img-lightbox-img" src="" alt="">
+</div>
+</body>
 </html>
