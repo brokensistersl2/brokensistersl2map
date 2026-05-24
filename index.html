@@ -1897,26 +1897,22 @@ function deleteRumeur(id){
 }
 
 // Publier une rumeur
-// ✅ CODE CORRIGÉ
-document.getElementById('rumeurs-post-btn').addEventListener('click', () => {
+document.getElementById('rumeurs-post-btn').addEventListener('click',()=>{
   if(!isAdmin) return;
   const text = document.getElementById('rumeurs-text').value.trim();
   if(!text) return;
   const img = document.getElementById('rumeurs-img-url').value.trim();
   const id  = Date.now().toString();
-
-  apiCall('/api/rumeurs', {
-    method: 'POST',
-    body: JSON.stringify({ id, text, img, ts: Date.now() })
+  apiCall('/api/rumeurs',{
+    method:'POST',
+    body:JSON.stringify({id,text,img,ts:Date.now()})
   })
-  .then(() => {
-    document.getElementById('rumeurs-text').value    = '';
-    document.getElementById('rumeurs-img-url').value = '';
+  .then(()=>{
+    document.getElementById('rumeurs-text').value='';
+    document.getElementById('rumeurs-img-url').value='';
     loadRumeurs();
   })
-  .catch(e => console.error('Erreur publication rumeur:', e));
-});
-// handled above
+  .catch(e=>console.error('Erreur publication rumeur:',e));
 });
 
 // Notification handled via polling in loadRumeurs
